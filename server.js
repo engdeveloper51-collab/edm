@@ -15,6 +15,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev_only_change_this_secret';
 
 const SSL_KEY_PATH = process.env.SSL_KEY_PATH || path.join(__dirname, 'localhost+1-key.pem');
 const SSL_CERT_PATH = process.env.SSL_CERT_PATH || path.join(__dirname, 'localhost+1.pem');
+const NODE_ENV = process.env.NODE_ENV || 'development';
 
 function loadSslCredentials() {
     try {
@@ -23,6 +24,10 @@ function loadSslCredentials() {
             cert: fs.readFileSync(SSL_CERT_PATH)
         };
     } catch (err) {
+        if (NODE_ENV === 'production') {
+            console.warn('⚠️  Em produção: certificados SSL não encontrados. Usando HTTP.');
+            return null;
+        }
         console.error('❌ Não foi possível carregar o certificado SSL:', err.message);
         console.error(`   SSL_KEY_PATH=${SSL_KEY_PATH}`);
         console.error(`   SSL_CERT_PATH=${SSL_CERT_PATH}`);
@@ -2348,27 +2353,35 @@ app.use((req, res) => {
 // ==================== INICIAR SERVIDOR ====================
 
 const PORT = Number(process.env.PORT || 3000);
-let httpsServer;
+let server;
 
 async function startServer() {
     await connectDB();
-    httpsServer = https.createServer(sslOptions, app);
+    
+    if (sslOptions && NODE_ENV !== 'production') {
+        server = https.createServer(sslOptions, app);
+        console.log('🔒 Usando HTTPS (certificados encontrados)');
+    } else {
+        server = app;
+        console.log('🌐 Usando HTTP (produção ou sem certificados SSL)');
+    }
 
-    httpsServer.listen(PORT, '0.0.0.0', () => {
-        console.log(`\n🚀 Servidor rodando em https://localhost:${PORT}`);
-        console.log(`📱 Acesso remoto (outros PCs/smartphones): https://${LOCAL_IP}:${PORT}`);
-        console.log(`📡 API em https://localhost:${PORT}/api`);
-        console.log(`📡 API remota em https://${LOCAL_IP}:${PORT}/api`);
-        console.log(`🗺️  Mapa em https://localhost:${PORT}/mapa`);
-        console.log(`🗺️  Mapa remoto em https://${LOCAL_IP}:${PORT}/mapa`);
-        console.log(`📄 Inspecção em https://localhost:${PORT}/Inspeccao.html`);
-        console.log(`🏘️  Bairro em https://localhost:${PORT}/bairro`);
-        console.log(`🏛️  Cidade em https://localhost:${PORT}/cidade`);
-        console.log(`🏢 Tipo de Ativo em https://localhost:${PORT}/tipo-poste`);
-        console.log(`📊 Extensa em https://localhost:${PORT}/extenca`);
-        console.log(`💚 Health check em https://localhost:${PORT}/health`);
-        console.log(`📊 Estatísticas em https://localhost:${PORT}/api/stats`);
-        console.log(`📊 Agrupamentos em https://localhost:${PORT}/api/agrupamentos\n`);
+    server.listen(PORT, '0.0.0.0', () => {
+        const protocol = sslOptions && NODE_ENV !== 'production' ? 'https' : 'http';
+        console.log(`\n🚀 Servidor rodando em ${protocol}://localhost:${PORT}`);
+        console.log(`📱 Acesso remoto (outros PCs/smartphones): ${protocol}://${LOCAL_IP}:${PORT}`);
+        console.log(`📡 API em ${protocol}://localhost:${PORT}/api`);
+        console.log(`📡 API remota em ${protocol}://${LOCAL_IP}:${PORT}/api`);
+        console.log(`🗺️  Mapa em ${protocol}://localhost:${PORT}/mapa`);
+        console.log(`🗺️  Mapa remoto em ${protocol}://${LOCAL_IP}:${PORT}/mapa`);
+        console.log(`📄 Inspecção em ${protocol}://localhost:${PORT}/Inspeccao.html`);
+        console.log(`🏘️  Bairro em ${protocol}://localhost:${PORT}/bairro`);
+        console.log(`🏛️  Cidade em ${protocol}://localhost:${PORT}/cidade`);
+        console.log(`🏢 Tipo de Ativo em ${protocol}://localhost:${PORT}/tipo-poste`);
+        console.log(`📊 Extensa em ${protocol}://localhost:${PORT}/extenca`);
+        console.log(`💚 Health check em ${protocol}://localhost:${PORT}/health`);
+        console.log(`📊 Estatísticas em ${protocol}://localhost:${PORT}/api/stats`);
+        console.log(`📊 Agrupamentos em ${protocol}://localhost:${PORT}/api/agrupamentos\n`);
     });
 }
 
