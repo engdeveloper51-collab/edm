@@ -1,0 +1,89 @@
+/* Responsive utility and base styles for EDM project */
+:root{
+  --max-width:1200px;
+  --gap:16px;
+  --bg:#f5f5f5;
+  --primary:#f26522;
+}
+
+/* Global resets */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;padding:0;background:var(--bg);font-family:Segoe UI, Arial, Helvetica, sans-serif;color:#222}
+img,video,canvas,iframe{max-width:100%;height:auto;display:block}
+
+/* Container */
+.container{width:100%;max-width:var(--max-width);margin:0 auto;padding:0 16px}
+
+/* Flexible layout helpers */
+.row{display:flex;flex-wrap:wrap;margin-left:-8px;margin-right:-8px}
+.col{padding-left:8px;padding-right:8px}
+.col-1{flex:0 0 8.333%}
+.col-2{flex:0 0 16.666%}
+.col-3{flex:0 0 25%}
+.col-4{flex:0 0 33.333%}
+.col-6{flex:0 0 50%}
+.col-12{flex:0 0 100%}
+
+/* Make forms full width on small screens, but buttons keep their size */
+input[type=text],input[type=email],input[type=password],select,textarea{width:100%;max-width:100%;}
+
+/* Center buttons on mobile, normal alignment on desktop */
+@media (max-width:600px){
+  button{width:auto;max-width:100%;display:block;margin-left:auto;margin-right:auto;}
+}
+
+@media (min-width:601px){
+  button{width:auto;max-width:100%;}
+}
+
+/* Tables responsive */
+.table-responsive{overflow:auto;width:100%}
+.table-responsive table{width:100%;border-collapse:collapse}
+
+/* Nav and drawer adjustments */
+.top{position:sticky;top:0;z-index:1000}
+.drawer{transition:transform .25s ease;transform:none}
+@media (min-width:800px){
+  .drawer{left:0;transform:none;position:static;height:auto}
+}
+
+/* Typography scaling */
+h1{font-size:clamp(1.4rem,2.4vw,2rem)}
+h2{font-size:clamp(1.2rem,2.0vw,1.6rem)}
+
+/* Responsive utilities */
+.hidden-sm{display:none}
+@media (max-width:600px){
+  .hidden-sm{display:none}
+}
+@media (min-width:601px){
+  .hidden-sm{display:block}
+}
+
+/* Maps, iframes, videos should fill container */
+.map, #mapa, iframe{width:100%;height:100%}
+
+/* Footer spacing for small screens */
+body{padding-bottom:56px}
+
+/* Accessibility improvements */
+button{cursor:pointer}
+
+/* Specific adjustments for small devices */
+@media (max-width:480px){
+  .menu-btn{font-size:22px}
+  .drawer{width:100%;left:-100%;}
+  .drawer.active{left:0}
+  .top{height:48px}
+}
+
+/* Make modal full screen on small */
+.modal{max-width:100%}
+
+/* Utility spacing classes */
+.mt-1{margin-top:8px}
+.mb-1{margin-bottom:8px}
+.p-1{padding:8px}
+
+/* Ensure tables and forms wrap nicely */
+table td, table th{word-break:break-word;padding:8px}

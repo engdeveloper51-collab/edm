@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa - Sistema GIS</title>
+    <link rel="stylesheet" href="responsive.css">
+    <link rel="icon" type="image/x-icon" href="Imag/logo.ico">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="config.js"></script>
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, sans-serif;
+            background: #f5f5f5;
+            overflow-x: hidden;
+        }
+
+        img,
+        video,
+        canvas,
+        iframe {
+            max-width: 100%;
+        }
+
+        .main {
+            width: 100%;
+            height: 100vh;
+        }
+
+        #mapa {
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls-panel {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 9px;
+            z-index: 1000;
+            max-width: 120px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .controls-panel h3 {
+            margin: 0 0 6px 0;
+            color: #1e90ff;
+            font-size: 12px;
+            border-bottom: 2px solid #1e90ff;
+            padding-bottom: 4px;
+        }
+
+        .legend {
+            background: #f9f9f9;
+            padding: 5px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #1e90ff;
+            font-size: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 3px;
+        }
+
+        .legend-color {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 1px solid #333;
+        }
+
+        .operacional {
+            background: #007bff;
+        }
+
+        .danificado {
+            background: #ff0000;
+        }
+
+        .pc-location {
+            background: #28a745;
+        }
+
+        .control-group {
+            margin-bottom: 6px;
+        }
+
+        .control-group label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+            font-size: 10px;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 10px;
+            box-sizing: border-box;
+            margin-bottom: 4px;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            margin-bottom: 6px;
+        }
+
+        .button-group.full {
+            grid-template-columns: 1fr;
+        }
+
+        .button-group.single {
+            grid-template-columns: 1fr;
+        }
+
+        button {
+            padding: 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            font-weight: 600;
+            font-size: 10px;
+            transition: all 0.3s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .btn-location {
+            background: #e74c3c;
+        }
+
+        .btn-filter {
+            background: #27ae60;
+        }
+
+        .btn-reset {
+            background: #95a5a6;
+        }
+
+        .btn-zoom {
+            background: #34495e;
+        }
+
+        .btn-satellite {
+            background: #f39c12;
+        }
+
+        .btn-satellite i {
+            font-size: 14px;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-satellite:hover i {
+            transform: scale(1.15);
+        }
+
+        .btn-infrared {
+            background: #c0392b;
+        }
+
+        .btn-infrared i {
+            font-size: 14px;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-infrared:hover i {
+            transform: scale(1.15);
+        }
+
+        .btn-zoom {
+            padding: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .notificacao {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            padding: 12px 16px;
+            background: #3498db;
+            color: white;
+            border-radius: 6px;
+            display: none;
+            z-index: 3000;
+            font-size: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .notificacao.success {
+            background: #27ae60;
+        }
+
+        .notificacao.error {
+            background: #e74c3c;
+        }
+
+        .notificacao.info {
+            background: #3498db;
+        }
+
+        .notificacao.active {
+            display: block;
+        }
+
+        /* Estilos para ícones de ativos */
+        .marker-wrapper {
+            position: relative;
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Efeito pulsante - RAIO 75% + COR INTENSIFICADA */
+        .pulse-ring {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 4px solid;
+            animation: pulse-animation 2s infinite;
+        }
+
+        .marker-operacional .pulse-ring {
+            border-color: #0052cc;
+            box-shadow: 0 0 0 0 rgba(0, 82, 204, 1);
+        }
+
+        .marker-danificado .pulse-ring {
+            border-color: #cc0000;
+            box-shadow: 0 0 0 0 rgba(204, 0, 0, 1);
+        }
+
+        @keyframes pulse-animation {
+            0% {
+                width: 48px;
+                height: 48px;
+                border-width: 4px;
+                opacity: 1;
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(0, 82, 204, 1);
+            }
+
+            50% {
+                opacity: 0.9;
+                box-shadow: 0 0 0 6px rgba(0, 82, 204, 0.5);
+            }
+
+            100% {
+                width: 72px;
+                height: 72px;
+                border-width: 2px;
+                opacity: 0;
+                transform: scale(1.5);
+                box-shadow: 0 0 0 12px rgba(0, 82, 204, 0);
+            }
+        }
+
+        .marker-danificado .pulse-ring {
+            animation: pulse-animation-danger 2s infinite;
+        }
+
+        @keyframes pulse-animation-danger {
+            0% {
+                width: 48px;
+                height: 48px;
+                border-width: 4px;
+                opacity: 1;
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(204, 0, 0, 1);
+            }
+
+            50% {
+                opacity: 0.9;
+                box-shadow: 0 0 0 6px rgba(204, 0, 0, 0.5);
+            }
+
+            100% {
+                width: 72px;
+                height: 72px;
+                border-width: 2px;
+                opacity: 0;
+                transform: scale(1.5);
+                box-shadow: 0 0 0 12px rgba(204, 0, 0, 0);
+            }
+        }
+
+        /* Imagem do marcador - sem redimensionamento, mantém qualidade original */
+        .marker-img {
+            position: relative;
+            width: auto;
+            height: auto;
+            max-width: 48px;
+            max-height: 48px;
+            z-index: 10;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+        }
+
+        .marker-operacional .marker-img {
+            filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+        }
+
+        .marker-danificado .marker-img {
+            filter: brightness(0.6) saturate(1.3) drop-shadow(0 2px 6px rgba(255, 0, 0, 0.5));
+        }
+
+        /* Indicador de dano */
+        .marker-danificado-overlay {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #ff3333, #cc0000);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            border: 3px solid white;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+            z-index: 20;
+            animation: blink-danger 1s infinite;
+        }
+
+        @keyframes blink-danger {
+
+            0%,
+            50%,
+            100% {
+                background: linear-gradient(135deg, #ff3333, #cc0000);
+            }
+
+            25%,
+            75% {
+                background: linear-gradient(135deg, #ff6666, #ff0000);
+            }
+        }
+
+        /* Estilos do Popup */
+        .popup-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 250px;
+        }
+
+        .popup-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 12px;
+        }
+
+        .popup-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 12px;
+        }
+
+        .popup-value {
+            color: #555;
+            font-size: 12px;
+            word-break: break-word;
+        }
+
+        .popup-estado {
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        .popup-estado.operacional {
+            background: #27ae60;
+        }
+
+        .popup-estado.danificado {
+            background: #e74c3c;
+        }
+
+        .popup-image-container {
+            border-top: 1px solid #ddd;
+            padding-top: 8px;
+            text-align: center;
+        }
+
+        .popup-image {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .popup-image:hover {
+            transform: scale(1.05);
+        }
+
+        .popup-sem-imagem {
+            color: #999;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .controls-panel {
+                max-width: 100px;
+                padding: 8px;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+
+            .popup-content {
+                min-width: 200px;
+            }
+
+            .popup-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main">
+        <div id="mapa"></div>
+
+        <div class="controls-panel">
+            <h3>🗺️</h3>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color operacional"></div>
+                    <span>Op.</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color danificado"></div>
+                    <span>Dan.</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color pc-location"></div>
+                    <span>Local</span>
+                </div>
+            </div>
+
+            <div class="button-group single">
+                <button class="btn-location" onclick="obterLocalizacao()" title="Minha Localização">📍</button>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-satellite" onclick="mudarMapaSatellite()" title="Cadastro"><i class="fas fa-database"></i></button>
+                <button class="btn-infrared" onclick="mudarMapaInfravermelho()" title="Inspeção"><i class="fas fa-binoculars"></i></button>
+            </div>
+
+            <div class="control-group">
+                <label>Cidade</label>
+                <select id="filtrarCidade" onchange="atualizarFiltrosAuto()">
+                    <option value="">Todas</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Bairro</label>
+                <select id="filtrarBairro" onchange="atualizarFiltrosAuto()">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Tipo</label>
+                <select id="filtrarTipo" onchange="atualizarFiltrosAuto()">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+
+            <div class="button-group full">
+                <button class="btn-filter" onclick="aplicarFiltro()">🔍</button>
+                <button class="btn-reset" onclick="limparFiltros()">✕</button>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-zoom" onclick="zoomIn()">+</button>
+                <button class="btn-zoom" onclick="zoomOut()">−</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notificacao" class="notificacao"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+        (function () {
+            const body = document.body;
+            body.style.opacity = '0';
+            body.style.transition = 'opacity 0.45s ease';
+
+            window.addEventListener('load', () => {
+                requestAnimationFrame(() => {
+                    body.style.opacity = '1';
+                });
+            });
+        })();
+
+        const API_URL = `${API_BASE_URL}/api`;
+        const REFRESH_INTERVAL = 10000; // 10 segundos
+        let visualizacaoMode = 'inspeccao'; // 'cadastro' ou 'inspeccao'
+
+        // Mapeamento de tipos de ativos para imagens
+        const tipoAtativoImagem = {
+            'PT': { img: '../Imag/PWT.png', nome: 'Ponto' },
+            'Poste De Ferro': { img: '../Imag/PFRed.png', nome: 'Poste De Ferro' },
+            'Poste De Madeira': { img: '../Imag/PMGree.png', nome: 'Poste De Madeira' },
+            'Poste De Betão': { img: '../Imag/PBYellow.png', nome: 'Poste De Betão' },
+            'Linha De Alta Tensão': { img: '../Imag/LNRed.png', nome: 'Linha De Alta Tensão' },
+            'Linha De Média Tensão': { img: '../Imag/LNGree.png', nome: 'Linha De Média Tensão' },
+            'Linha De Baixa Tensão': { img: '../Imag/LNBlue.png', nome: 'Linha De Baixa Tensão' },
+            'Linha Subterrânea': { img: '../Imag/LNBlack.png', nome: 'Linha Subterrânea' }
+        };
+
+        let mapa, layerGroup, locationLayer;
+        let todosActivos = [];
+        let activos = [];
+        let posicaoAtual = null;
+        let currentMapType = 'satellite';
+        let refreshInterval = null;
+        let ultimosDados = {};
+        let filtrosAtivos = false;
+
+        let filtros = {
+            cidade: '',
+            bairro: '',
+            tipo: ''
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            inicializarMapa();
+            
+            // Desativar/Esconder botões de modo APENAS no iframe de Inspeção
+            const isInspeccaoIframe = window.self !== window.top;
+            console.log('🔍 Em iframe:', isInspeccaoIframe);
+            
+            if (isInspeccaoIframe) {
+                try {
+                    // Verificar se o parent é Inspeccao.html
+                    if (typeof window.parent.definirCoordenadas === 'function') {
+                        const btnCadastro = document.querySelector('.btn-satellite');
+                        const btnInspeccao = document.querySelector('.btn-infrared');
+                        
+                        console.log('❌ Escondendo botões de modo em Inspeção');
+                        
+                        // Esconder botão Cadastro
+                        if (btnCadastro) {
+                            btnCadastro.style.display = 'none';
+                        }
+                        
+                        // Esconder botão Inspeção
+                        if (btnInspeccao) {
+                            btnInspeccao.style.display = 'none';
+                        }
+                        
+                        // Carregar filtros e ativos em modo Inspeção por padrão
+                        console.log('⚙️ Carregando filtros e ativos em Inspeccao');
+                        visualizacaoMode = 'inspeccao';
+                        currentMapType = 'infrared';
+                        
+                        // Adicionar camada infrared
+                        if (!mapa.hasLayer(mapa.layers.infrared)) {
+                            mapa.layers.infrared.addTo(mapa);
+                        }
+                        
+                        carregarFiltros();
+                        carregarActivos();
+                    }
+                } catch (e) {
+                    console.log('⚠️ Erro ao detectar parent:', e.message);
+                }
+            } else {
+                console.log('✅ Em mapa.html direto - Botões de modo visíveis');
+            }
+        });
+
+        function inicializarMapa() {
+            mapa = L.map('mapa', { maxZoom: 22 }).setView([-14.505, 40.696], 13);
+
+            // Satélite Esri de alta qualidade até zoom 18
+            const satelliteEsri = L.tileLayer(
+                'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                { maxZoom: 18, attribution: '© Esri', className: 'satellite-layer' }
+            );
+
+            // Roadmap com nomes de ruas de alta qualidade (zoom 18+)
+            const roadmapHighQuality = L.tileLayer(
+                'https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png',
+                { minZoom: 18, maxZoom: 22, attribution: '© OpenStreetMap Contributors', className: 'roadmap-layer' }
+            );
+
+            // Infrared Esri até zoom 18
+            const infraredEsri = L.tileLayer(
+                'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?style=ir',
+                { maxZoom: 18, attribution: '© Esri', className: 'infrared-layer' }
+            );
+
+            // Infrared Roadmap de alta qualidade (zoom 18+)
+            const infraredHighQuality = L.tileLayer(
+                'https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png',
+                { minZoom: 18, maxZoom: 22, attribution: '© OpenStreetMap Contributors', className: 'infrared-layer' }
+            );
+
+            mapa.layers = {
+                satellite: L.layerGroup([satelliteEsri, roadmapHighQuality]),
+                infrared: L.layerGroup([infraredEsri, infraredHighQuality])
+            };
+
+            mapa.layers.satellite.addTo(mapa);
+            layerGroup = L.layerGroup().addTo(mapa);
+            locationLayer = L.layerGroup().addTo(mapa);
+
+            mapa.on('zoomend', atualizarEstadoBotoes);
+
+            setTimeout(() => mapa.invalidateSize(), 300);
+            atualizarEstadoBotoes();
+        }
+
+        function obterLocalizacao() {
+            if (!navigator.geolocation) {
+                mostrarNotificacao('⚠️ Geolocalização não suportada', 'error');
+                return;
+            }
+
+            mostrarNotificacao('📍 Obtendo localização com alta precisão...', 'info');
+
+            const MAX_ACCURACY_METERS = 40;
+            const HIGH_ACCURACY_ZOOM = 17;
+            let melhorPosicao = null;
+            let watchId = null;
+            let finalizado = false;
+
+            function renderizarPosicao(position, origem = 'gps') {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const accuracy = position.coords.accuracy || 0;
+
+                posicaoAtual = { lat, lng };
+                locationLayer.clearLayers();
+
+                const raioPrecisao = L.circle([lat, lng], {
+                    radius: Math.max(accuracy, 5),
+                    color: '#2ecc71',
+                    weight: 2,
+                    fillColor: '#2ecc71',
+                    fillOpacity: 0.12
+                });
+
+                const marcador = L.circleMarker([lat, lng], {
+                    radius: 9,
+                    fillColor: '#28a745',
+                    color: '#155724',
+                    weight: 3,
+                    fillOpacity: 0.95
+                });
+
+                marcador.bindPopup(
+                    `📍 Sua Posição (${origem})<br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}<br>Precisão: ±${accuracy.toFixed(0)}m`
+                );
+
+                locationLayer.addLayer(raioPrecisao);
+                locationLayer.addLayer(marcador);
+                mapa.setView([lat, lng], HIGH_ACCURACY_ZOOM);
+            }
+
+            function encerrarComSucesso(position, origem = 'gps') {
+                if (finalizado) return;
+                finalizado = true;
+
+                if (watchId !== null) {
+                    navigator.geolocation.clearWatch(watchId);
+                }
+
+                renderizarPosicao(position, origem);
+                const acc = position.coords.accuracy || 0;
+                mostrarNotificacao(`✅ Localização precisa: ±${acc.toFixed(0)}m`, 'success');
+            }
+
+            function tratarErro(error) {
+                if (finalizado) return;
+
+                let mensagem = '❌ Erro ao obter localização';
+                if (error.code === error.PERMISSION_DENIED) {
+                    mensagem = '❌ Permissão de localização negada';
+                } else if (error.code === error.POSITION_UNAVAILABLE) {
+                    mensagem = '❌ Localização não disponível no momento';
+                } else if (error.code === error.TIMEOUT) {
+                    mensagem = '⚠️ Tempo excedido ao obter localização';
+                }
+
+                // Se conseguiu ao menos uma posição parcial, usa ela.
+                if (melhorPosicao) {
+                    encerrarComSucesso(melhorPosicao, 'aproximada');
+                    return;
+                }
+
+                finalizado = true;
+                mostrarNotificacao(mensagem, 'error');
+            }
+
+            // Tentativa rápida inicial para resposta imediata.
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    melhorPosicao = position;
+                    renderizarPosicao(position, 'inicial');
+                },
+                () => {
+                    // Ignora erro da tentativa rápida e segue para a precisa.
+                },
+                {
+                    enableHighAccuracy: false,
+                    timeout: 5000,
+                    maximumAge: 15000
+                }
+            );
+
+            // Busca precisa: melhora o ponto enquanto recebe leituras melhores.
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    if (!melhorPosicao || (position.coords.accuracy || Infinity) < (melhorPosicao.coords.accuracy || Infinity)) {
+                        melhorPosicao = position;
+                        renderizarPosicao(position, 'gps');
+                    }
+
+                    if ((position.coords.accuracy || Infinity) <= MAX_ACCURACY_METERS) {
+                        encerrarComSucesso(position, 'gps');
+                    }
+                },
+                tratarErro,
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0
+                }
+            );
+
+            // Fallback: finaliza com a melhor posição obtida após alguns segundos.
+            setTimeout(() => {
+                if (!finalizado && melhorPosicao) {
+                    encerrarComSucesso(melhorPosicao, 'melhor disponível');
+                } else if (!finalizado) {
+                    tratarErro({ code: 3 });
+                }
+            }, 12000);
+        }
+
+        function mudarMapaSatellite() {
+            console.log('🛰️ Mudando para modo Cadastro (Satélite)');
+            
+            // Remove a camada infrared se estiver ativa
+            if (mapa.hasLayer(mapa.layers.infrared)) {
+                mapa.removeLayer(mapa.layers.infrared);
+            }
+            
+            // Adiciona a camada de satélite se não estiver lá
+            if (!mapa.hasLayer(mapa.layers.satellite)) {
+                mapa.layers.satellite.addTo(mapa);
+            }
+            
+            currentMapType = 'satellite';
+            visualizacaoMode = 'cadastro';
+            
+            // Define o zoom apropriado
+            mapa.setZoom(13);
+            
+            mostrarNotificacao('📋 Cadastro ativado - Satélite', 'info');
+            console.log('✅ Modo Cadastro ativado');
+            
+            // Carrega filtros e ativos
+            carregarFiltros();
+            carregarActivos();
+            
+            // Inicia auto-refresh
+            iniciarAutoRefresh();
+        }
+
+        function mudarMapaInfravermelho() {
+            console.log('🔍 Mudando para modo Inspeção (Roadmap)');
+            
+            // Remove a camada satellite se estiver ativa
+            if (mapa.hasLayer(mapa.layers.satellite)) {
+                mapa.removeLayer(mapa.layers.satellite);
+            }
+            
+            // Adiciona a camada de infrared se não estiver lá
+            if (!mapa.hasLayer(mapa.layers.infrared)) {
+                mapa.layers.infrared.addTo(mapa);
+            }
+            
+            currentMapType = 'infrared';
+            visualizacaoMode = 'inspeccao';
+            
+            // Define o zoom apropriado
+            mapa.setZoom(13);
+            
+            mostrarNotificacao('🔍 Inspeção ativada - Roadmap', 'info');
+            console.log('✅ Modo Inspeção ativado');
+            
+            // Carrega filtros e ativos
+            carregarFiltros();
+            carregarActivos();
+            
+            // Inicia auto-refresh
+            iniciarAutoRefresh();
+        }
+
+        async function carregarFiltros() {
+            try {
+                const response = await fetch(`${API_URL}/cidades`);
+                if (response.ok) {
+                    const cidades = await response.json();
+                    const select = document.getElementById('filtrarCidade');
+                    cidades.forEach(cidade => {
+                        const option = document.createElement('option');
+                        option.value = cidade;
+                        option.textContent = cidade;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (err) {
+                console.error('Erro ao carregar cidades:', err);
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/bairros`);
+                if (response.ok) {
+                    const bairros = await response.json();
+                    const select = document.getElementById('filtrarBairro');
+                    bairros.forEach(bairro => {
+                        const option = document.createElement('option');
+                        option.value = bairro;
+                        option.textContent = bairro;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (err) {
+                console.error('Erro ao carregar bairros:', err);
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/tipos-activos`);
+                if (response.ok) {
+                    const tipos = await response.json();
+                    const select = document.getElementById('filtrarTipo');
+                    tipos.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.tipo;
+                        option.textContent = item.tipo;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (err) {
+                console.error('Erro ao carregar tipos:', err);
+            }
+        }
+
+        async function carregarActivos() {
+            try {
+                const endpoint = visualizacaoMode === 'cadastro' ? '/activos-cadastro' : '/activos-web';
+                const response = await fetch(`${API_URL}${endpoint}`);
+                if (response.ok) {
+                    todosActivos = await response.json();
+
+                    // Verifica se houve mudanças
+                    const mudancas = detectarMudancas(todosActivos);
+
+                    // Aplica filtros se houver
+                    if (filtrosAtivos) {
+                        atualizarComFiltros();
+                    } else {
+                        activos = [...todosActivos];
+                        desenharActivos();
+                    }
+
+                    if (!ultimosDados.carregamento) {
+                        const modo = visualizacaoMode === 'cadastro' ? '📋 Cadastro' : '🔧 Manutenção';
+                        mostrarNotificacao(`✅ ${activos.length} activos carregados (${modo})`, 'success');
+                    } else if (mudancas.danificados > 0 || mudancas.operacionais > 0) {
+                        console.log(`📊 Actualização detectada: ${mudancas.danificados} danificados, ${mudancas.operacionais} operacionais`);
+                    }
+
+                    ultimosDados.carregamento = true;
+                }
+            } catch (err) {
+                console.error('Erro ao carregar activos:', err);
+                if (ultimosDados.carregamento) {
+                    console.warn('⚠️ Falha na actualização automática');
+                } else {
+                    mostrarNotificacao('❌ Erro ao carregar activos', 'error');
+                }
+            }
+        }
+
+        function detectarMudancas(novosDados) {
+            const mudancas = {
+                danificados: 0,
+                operacionais: 0
+            };
+
+            if (!ultimosDados.activos || ultimosDados.activos.length === 0) {
+                ultimosDados.activos = novosDados;
+                return mudancas;
+            }
+
+            const mapaAntigo = {};
+            ultimosDados.activos.forEach(a => {
+                mapaAntigo[a.id] = a.estado;
+            });
+
+            novosDados.forEach(a => {
+                if (mapaAntigo[a.id] && mapaAntigo[a.id] !== a.estado) {
+                    if (a.estado === 'Danificado') {
+                        mudancas.danificados++;
+                    } else {
+                        mudancas.operacionais++;
+                    }
+                }
+            });
+
+            ultimosDados.activos = novosDados;
+            return mudancas;
+        }
+
+        function iniciarAutoRefresh() {
+            if (refreshInterval) clearInterval(refreshInterval);
+
+            refreshInterval = setInterval(() => {
+                carregarActivos();
+            }, REFRESH_INTERVAL);
+
+            console.log(`🔄 Auto-refresh iniciado: a cada ${REFRESH_INTERVAL / 1000} segundos`);
+        }
+
+        function atualizarFiltrosAuto() {
+            const cidade = document.getElementById('filtrarCidade').value;
+            const bairro = document.getElementById('filtrarBairro').value;
+            const tipo = document.getElementById('filtrarTipo').value;
+
+            // Verifica se há algum filtro ativo
+            if (cidade || bairro || tipo) {
+                filtrosAtivos = true;
+                filtros = { cidade, bairro, tipo };
+                atualizarComFiltros();
+            } else {
+                filtrosAtivos = false;
+                filtros = { cidade: '', bairro: '', tipo: '' };
+                activos = [...todosActivos];
+                desenharActivos();
+            }
+        }
+
+        function atualizarComFiltros() {
+            const cidade = filtros.cidade;
+            const bairro = filtros.bairro;
+            const tipo = filtros.tipo;
+
+            activos = todosActivos.filter(a => {
+                const matchCidade = !cidade || a.cidade === cidade;
+                const matchBairro = !bairro || a.bairro === bairro;
+                const matchTipo = !tipo || a.tipo === tipo;
+                return matchCidade && matchBairro && matchTipo;
+            });
+
+            desenharActivos();
+        }
+
+        function obterImagemAtivo(tipo) {
+            // Procura correspondência exata
+            if (tipoAtativoImagem[tipo]) {
+                return tipoAtativoImagem[tipo].img;
+            }
+
+            // Procura correspondência parcial (case-insensitive)
+            for (const [chave, valor] of Object.entries(tipoAtativoImagem)) {
+                if (tipo && tipo.toLowerCase().includes(chave.toLowerCase())) {
+                    return valor.img;
+                }
+            }
+
+            // Padrão: volta ao marcador SVG anterior
+            return null;
+        }
+
+        function criarMarkerCustomizado(ativo) {
+            const nomeImagem = obterImagemAtivo(ativo.tipo);
+            const isDanificado = ativo.estado === 'Danificado';
+            const classeEstado = isDanificado ? 'marker-danificado' : 'marker-operacional';
+            const overlayHTML = isDanificado ? '<div class="marker-danificado-overlay">!</div>' : '';
+
+            if (!nomeImagem) {
+                // Volta ao SVG padrão se não encontrar imagem
+                const cor = isDanificado ? '#ff0000' : '#007bff';
+
+                const svgString = `
+            <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+                <style>
+                    @keyframes pulse {
+                        0% { r: 8px; opacity: 1; }
+                        50% { r: 12px; opacity: 0.5; }
+                        100% { r: 8px; opacity: 1; }
+                    }
+                    .pulse-circle { animation: pulse 2s infinite; }
+                </style>
+                <circle class="pulse-circle" cx="15" cy="15" r="8" fill="${cor}" opacity="0.3" />
+                <circle cx="15" cy="15" r="8" fill="${cor}" stroke="#000" stroke-width="2" />
+            </svg>
+        `;
+
+                const customIcon = L.divIcon({
+                    html: svgString,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15],
+                    popupAnchor: [0, -15],
+                    className: classeEstado
+                });
+
+                return customIcon;
+            }
+
+            // Cria ícone com imagem e efeito pulsante VISÍVEL (75%)
+            const iconHTML = `
+        <div class="marker-wrapper ${classeEstado}">
+            <div class="pulse-ring"></div>
+            <img src="${nomeImagem}" class="marker-img" loading="lazy" />
+            ${overlayHTML}
+        </div>
+    `;
+
+            const customIcon = L.divIcon({
+                html: iconHTML,
+                iconSize: [64, 64],
+                iconAnchor: [32, 32],
+                popupAnchor: [0, -32],
+                className: classeEstado
+            });
+
+            return customIcon;
+        }
+
+        function criarPopupHTML(ativo) {
+            const cor = ativo.estado === 'Danificado' ? '#e74c3c' : '#27ae60';
+            const classeEstado = ativo.estado === 'Danificado' ? 'danificado' : 'operacional';
+
+            let imagemHTML = '';
+            if (ativo.imagem) {
+                imagemHTML = `
+                    <div class="popup-image-container">
+                        <img src="${ativo.imagem}" class="popup-image" alt="Imagem do ativo" />
+                    </div>
+                `;
+            } else {
+                imagemHTML = `
+                    <div class="popup-image-container">
+                        <span class="popup-sem-imagem">Sem imagem</span>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="popup-content">
+                    <div class="popup-info">
+                        <div class="popup-label">Tipo:</div>
+                        <div class="popup-value">${ativo.tipo}</div>
+                        
+                        <div class="popup-label">Bairro:</div>
+                        <div class="popup-value">${ativo.bairro}</div>
+                        
+                        <div class="popup-label">Cidade:</div>
+                        <div class="popup-value">${ativo.cidade}</div>
+                        
+                        <div class="popup-label">Latitude:</div>
+                        <div class="popup-value">${ativo.latitude.toFixed(6)}</div>
+                        
+                        <div class="popup-label">Longitude:</div>
+                        <div class="popup-value">${ativo.longitude.toFixed(6)}</div>
+                    </div>
+                    
+                    <div class="popup-estado ${classeEstado}">
+                        Estado: ${ativo.estado}
+                    </div>
+                    
+                    ${imagemHTML}
+                </div>
+            `;
+        }
+
+        function desenharActivos() {
+            layerGroup.clearLayers();
+
+            activos.forEach(a => {
+                const customIcon = criarMarkerCustomizado(a);
+                const marker = L.marker([a.latitude, a.longitude], { icon: customIcon });
+
+                const popupHTML = criarPopupHTML(a);
+                marker.bindPopup(popupHTML, {
+                    maxWidth: 300,
+                    className: 'custom-popup'
+                });
+
+                marker.on('click', function () {
+                    if (window.parent && window.parent.definirCoordenadas) {
+                        window.parent.definirCoordenadas(a.latitude, a.longitude);
+                    }
+                });
+
+                layerGroup.addLayer(marker);
+            });
+        }
+
+        function aplicarFiltro() {
+            atualizarFiltrosAuto();
+        }
+
+        function limparFiltros() {
+            document.getElementById('filtrarCidade').value = '';
+            document.getElementById('filtrarBairro').value = '';
+            document.getElementById('filtrarTipo').value = '';
+            filtrosAtivos = false;
+            filtros = { cidade: '', bairro: '', tipo: '' };
+            activos = [...todosActivos];
+            desenharActivos();
+            mostrarNotificacao('✅ Filtros limpos', 'success');
+        }
+
+        function zoomIn() {
+            if (mapa.getZoom() < 21) {
+                mapa.zoomIn();
+            }
+        }
+
+        function zoomOut() {
+            if (mapa.getZoom() > 1) {
+                mapa.zoomOut();
+            }
+        }
+
+        function atualizarEstadoBotoes() {
+            const zoomAtual = mapa.getZoom();
+            const botoesZoom = document.querySelectorAll('.btn-zoom');
+            botoesZoom[0].disabled = zoomAtual >= 21;
+            botoesZoom[1].disabled = zoomAtual <= 1;
+        }
+
+        function mostrarNotificacao(mensagem, tipo = 'info') {
+            const elem = document.getElementById('notificacao');
+            elem.textContent = mensagem;
+            elem.className = `notificacao ${tipo} active`;
+
+            setTimeout(() => {
+                elem.classList.remove('active');
+            }, 3000);
+        }
+
+        // Parar refresh ao fechar a página
+        window.addEventListener('beforeunload', () => {
+            if (refreshInterval) clearInterval(refreshInterval);
+        });
+    </script>
+
+</body>
+
+</html>

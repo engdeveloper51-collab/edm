@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geo-Validação</title>
+    <link rel="stylesheet" href="responsive.css">
+    <script src="config.js"></script>
+<link rel="icon" type="image/x-icon" href="logox/logo.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial;
+        }
+
+        body {
+            height: 100vh;
+            background: radial-gradient(circle at 18% 20%, rgba(255, 184, 108, 0.30), transparent 35%),
+                        radial-gradient(circle at 82% 85%, rgba(242, 101, 34, 0.24), transparent 40%),
+                        linear-gradient(135deg, #7a2500 0%, #d54e0f 45%, #f26522 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        img,
+        video,
+        canvas,
+        iframe {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* glass effect */
+        .login-box {
+            background: rgba(255, 255, 255, 0.14);
+            backdrop-filter: blur(14px);
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 350px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 1s ease;
+            position: relative;
+            z-index: 2;
+            border: 1px solid rgba(255, 220, 170, 0.35);
+        }
+
+        .login-box h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .login-box input:focus {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 0 10px rgba(255, 153, 51, 0.5);
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #ff8c00, #f26522);
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        .login-box button:hover {
+            background: linear-gradient(135deg, #ff7a00, #d95512);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(242, 101, 34, 0.45);
+        }
+
+        .login-box button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #msg {
+            text-align: center;
+            margin-top: 10px;
+            color: #ff6b6b;
+            font-size: 13px;
+            min-height: 20px;
+        }
+
+        #msg.success {
+            color: #51cf66;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #ffb347;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 5px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .particles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            bottom: -40px;
+            font-size: var(--size, 16px);
+            line-height: 1;
+            color: rgba(255, 216, 150, 0.9);
+            text-shadow: 0 0 12px rgba(255, 140, 0, 0.6);
+            opacity: 0.5;
+            animation: floatParticle var(--duration, 13s) linear infinite;
+            animation-delay: var(--delay, 0s);
+        }
+
+        @keyframes floatParticle {
+            0% {
+                transform: translate3d(0, 0, 0) scale(0.9);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.55;
+            }
+
+            85% {
+                opacity: 0.4;
+            }
+
+            100% {
+                transform: translate3d(var(--drift, 18px), -110vh, 0) scale(1.05);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-box {
+                padding: 20px;
+                max-width: 90%;
+            }
+
+            .login-box h2 {
+                font-size: 20px;
+            }
+
+            .login-box input,
+            .login-box button {
+                padding: 10px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="particles" aria-hidden="true">
+        <span class="particle" style="left:6%; --size:14px; --duration:14s; --delay:0s; --drift:18px;">⚡</span>
+        <span class="particle" style="left:18%; --size:16px; --duration:17s; --delay:2s; --drift:26px;">⚡</span>
+        <span class="particle" style="left:31%; --size:13px; --duration:12s; --delay:1.2s; --drift:14px;">⚡</span>
+        <span class="particle" style="left:48%; --size:18px; --duration:16s; --delay:3s; --drift:30px;">⚡</span>
+        <span class="particle" style="left:63%; --size:14px; --duration:13s; --delay:0.8s; --drift:18px;">⚡</span>
+        <span class="particle" style="left:79%; --size:17px; --duration:18s; --delay:2.5s; --drift:28px;">⚡</span>
+        <span class="particle" style="left:92%; --size:15px; --duration:15s; --delay:4s; --drift:20px;">⚡</span>
+    </div>
+
+    <form class="login-box" id="loginForm">
+        <h2>🔐 Login</h2>
+
+        <input type="text" id="username" placeholder="Usuário" required>
+        <input type="password" id="password" placeholder="Senha" required>
+
+        <button type="submit" id="btnLogin">Entrar</button>
+
+        <p id="msg"></p>
+    </form>
+
+    <script>
+        // `config.js` define `API_BASE_URL` usando o mesmo protocolo/host/porta da página
+
+        (function () {
+            const body = document.body;
+            body.style.opacity = '0';
+            body.style.transition = 'opacity 0.45s ease';
+
+            window.addEventListener('load', () => {
+                requestAnimationFrame(() => {
+                    body.style.opacity = '1';
+                });
+            });
+
+            window.navegarComTransicao = function (url) {
+                body.style.opacity = '0';
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 380);
+            };
+        })();
+
+        document.getElementById("loginForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const user = document.getElementById("username").value.trim();
+            const pass = document.getElementById("password").value;
+            const msg = document.getElementById("msg");
+            const btnLogin = document.getElementById("btnLogin");
+
+            // Validações básicas
+            if (!user || !pass) {
+                msg.innerText = "Por favor, preencha todos os campos";
+                msg.className = "";
+                return;
+            }
+
+            msg.innerText = "";
+            btnLogin.disabled = true;
+            btnLogin.innerHTML = '<span class="loading"></span>Entrando...';
+
+            try {
+                const loginUrl = `${API_BASE_URL}/api/login`;
+                console.log("🔐 Tentando conectar em:", loginUrl);
+                
+                const response = await fetch(loginUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        username: user,
+                        password: pass
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Armazenar dados do usuário em sessionStorage
+                    sessionStorage.setItem("user_id", data.user.id);
+                    sessionStorage.setItem("user_name", data.user.username);
+
+                    msg.innerText = "✓ Bem-vindo " + data.user.username + "!";
+                    msg.className = "success";
+
+                    // Redirecionar após 1 segundo
+                    setTimeout(() => {
+                        // <a href="img/formularios/Menu.html">Login</a>
+                        navegarComTransicao("Menu.html");
+                    }, 1000);
+                } else {
+                    msg.innerText = data.message || "Credenciais inválidas";
+                    msg.className = "";
+                    btnLogin.disabled = false;
+                    btnLogin.innerHTML = "Entrar";
+                }
+
+            } catch (error) {
+                console.error("❌ Erro ao conectar:", error);
+                console.error("URL tentada:", `${API_BASE_URL}/api/login`);
+                msg.innerText = `❌ Erro ao conectar ao servidor: ${error.message}`;
+                msg.className = "";
+                btnLogin.disabled = false;
+                btnLogin.innerHTML = "Entrar";
+            }
+        });
+
+        // Limpar inputs ao carregar a página
+        window.addEventListener('load', () => {
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
+        });
+    </script>
+
+</body>
+
+</html>

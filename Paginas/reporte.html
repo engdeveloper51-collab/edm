@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório - Sistema GIS</title>
+    <link rel="stylesheet" href="responsive.css">
+    <link rel="icon" type="image/x-icon" href="Imag/logo.ico">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, sans-serif;
+            background: #f5f5f5;
+            overflow-x: hidden;
+        }
+
+        .main {
+            padding: 12px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #f26522;
+        }
+
+        .header h1 {
+            color: #f26522;
+            font-size: 28px;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .filters-section {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #f26522;
+        }
+
+        .filters-title {
+            color: #f26522;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .filter-item {
+            display: inline-block;
+            margin-right: 20px;
+            font-size: 12px;
+            color: #555;
+        }
+
+        .filter-item strong {
+            color: #333;
+        }
+
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f26522 0%, #e55a1a 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(242, 101, 34, 0.2);
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.95;
+            letter-spacing: 0.5px;
+        }
+
+        .activos-section {
+            margin-top: 30px;
+        }
+
+        .activos-title {
+            color: #f26522;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f26522;
+        }
+
+        .ativo-card {
+            background: #fafafa;
+            border-left: 4px solid #f26522;
+            padding: 18px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            page-break-inside: avoid;
+        }
+
+        .ativo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .ativo-title {
+            color: #f26522;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .ativo-tipo {
+            color: #555;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .ativo-localizacao {
+            color: #777;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .ativo-coords {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #555;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 12px;
+        }
+
+        .componentes-label {
+            color: #f26522;
+            font-weight: 600;
+            font-size: 12px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .componente-item {
+            background: white;
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            border-left: 3px solid #e74c3c;
+            border-radius: 2px;
+            font-size: 12px;
+            color: #555;
+        }
+
+        .componente-nome {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #f26522;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background: #e55a1a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(242, 101, 34, 0.2);
+        }
+
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        button.secondary {
+            background: #3498db;
+        }
+
+        button.secondary:hover {
+            background: #2980b9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .filter-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-weight: 600;
+            color: #333;
+            font-size: 12px;
+        }
+
+        select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            box-sizing: border-box;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #f26522;
+            box-shadow: 0 0 5px rgba(242, 101, 34, 0.2);
+        }
+
+        .notificacao {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            max-width: 300px;
+            padding: 12px 16px;
+            background: #27ae60;
+            color: white;
+            border-radius: 4px;
+            display: none;
+            z-index: 3000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-size: 12px;
+        }
+
+        .notificacao.error {
+            background: #e74c3c;
+        }
+
+        .notificacao.info {
+            background: #3498db;
+        }
+
+        .notificacao.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .button-container,
+            .filter-group {
+                display: none;
+            }
+
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+
+            .ativo-card {
+                page-break-inside: avoid;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-number {
+                font-size: 24px;
+            }
+
+            .ativo-card {
+                padding: 12px;
+            }
+
+            button {
+                padding: 10px 16px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main">
+        <div class="container">
+            <!-- HEADER -->
+            <div class="header">
+                <h1>📊 RELATÓRIO DE ACTIVOS COM DANOS</h1>
+                <p id="dataRelatorio">Gerado em: -</p>
+            </div>
+
+            <!-- FILTROS -->
+            <div class="filter-group">
+                <div class="form-group">
+                    <label>Cidade</label>
+                    <select id="filterCidade" onchange="aplicarFiltros()">
+                        <option value="">Todas as Cidades</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Bairro</label>
+                    <select id="filterBairro" onchange="aplicarFiltros()">
+                        <option value="">Todos os Bairros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Activo</label>
+                    <select id="filterTipo" onchange="aplicarFiltros()">
+                        <option value="">Todos os Tipos</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- FILTROS APLICADOS -->
+            <div class="filters-section" id="filtrosAplicados" style="display: none;">
+                <div class="filters-title">🔍 FILTROS APLICADOS</div>
+                <div class="filter-item"><strong>Cidade:</strong> <span id="filtrosCidade">-</span></div>
+                <div class="filter-item"><strong>Bairro:</strong> <span id="filtrosBairro">-</span></div>
+                <div class="filter-item"><strong>Tipo:</strong> <span id="filtrosTipo">-</span></div>
+            </div>
+
+            <!-- ESTATÍSTICAS -->
+            <div class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalAtivos">0</div>
+                    <div class="stat-label">Total de Activos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="ativosComDano">0</div>
+                    <div class="stat-label">Activos com Dano</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="componentesDanificados">0</div>
+                    <div class="stat-label">Componentes Danificados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="taxaDano">0%</div>
+                    <div class="stat-label">Taxa de Dano</div>
+                </div>
+            </div>
+
+            <!-- BOTÕES DE AÇÃO -->
+            <div class="button-container">
+                <button onclick="exportarPDF()">📄 Exportar PDF</button>
+                <button class="secondary" onclick="exportarCSV()">📋 Exportar CSV</button>
+                <button class="secondary" onclick="window.print()">🖨️ Imprimir</button>
+                <button class="secondary" onclick="limparFiltros()">🔄 Limpar Filtros</button>
+            </div>
+
+            <!-- RELATÓRIO -->
+            <div id="relatorioConteudo">
+                <div class="activos-section">
+                    <div class="activos-title">📌 ACTIVOS COM COMPONENTES DANIFICADOS</div>
+                    <div id="listadoAtivos" class="empty-state">
+                        <p>Carregando dados...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICAÇÕES -->
+    <div id="notificacao" class="notificacao"></div>
+
+    <script>
+        const API_URL = `${API_BASE_URL}/api`;
+        let todosAtivos = [];
+        let ativosComDanos = [];
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarDados();
+            atualizarDataRelatorio();
+        });
+
+        function atualizarDataRelatorio() {
+            const agora = new Date();
+            const data = agora.toLocaleDateString('pt-BR');
+            const hora = agora.toLocaleTimeString('pt-BR');
+            document.getElementById('dataRelatorio').textContent = `Gerado em: ${data}, ${hora}`;
+        }
+
+        // ==================== CARREGAR DADOS ====================
+        async function carregarDados() {
+            try {
+                mostrarNotificacao('Carregando dados...', 'info');
+
+                const response = await fetch(`${API_URL}/activos`);
+                if (!response.ok) throw new Error('Erro ao carregar activos');
+
+                todosAtivos = await response.json();
+
+                // Filtrar apenas activos com componentes danificados
+                ativosComDanos = [];
+                for (const ativo of todosAtivos) {
+                    const componentes = await fetch(`${API_URL}/componentes/${ativo.id}`);
+                    if (componentes.ok) {
+                        const comps = await componentes.json();
+                        const danificados = comps.filter(c => c.estado === 'Danificado');
+                        if (danificados.length > 0) {
+                            ativosComDanos.push({
+                                ...ativo,
+                                componentes: danificados
+                            });
+                        }
+                    }
+                }
+
+                carregarFiltros();
+                aplicarFiltros();
+                mostrarNotificacao('Dados carregados com sucesso!', 'info');
+
+            } catch (error) {
+                console.error('Erro:', error);
+                mostrarNotificacao('Erro ao carregar dados', 'error');
+                document.getElementById('listadoAtivos').innerHTML = '<p>Erro ao carregar dados</p>';
+            }
+        }
+
+        // ==================== CARREGAR FILTROS ====================
+        function carregarFiltros() {
+            const cidades = [...new Set(todosAtivos.map(a => a.cidade))].filter(Boolean).sort();
+            const tipos = [...new Set(todosAtivos.map(a => a.tipo))].filter(Boolean).sort();
+
+            const selectCidade = document.getElementById('filterCidade');
+            const selectTipo = document.getElementById('filterTipo');
+
+            cidades.forEach(cidade => {
+                const option = document.createElement('option');
+                option.value = cidade;
+                option.textContent = cidade;
+                selectCidade.appendChild(option);
+            });
+
+            tipos.forEach(tipo => {
+                const option = document.createElement('option');
+                option.value = tipo;
+                option.textContent = tipo;
+                selectTipo.appendChild(option);
+            });
+        }
+
+        // ==================== APLICAR FILTROS ====================
+        function aplicarFiltros() {
+            const cidade = document.getElementById('filterCidade').value;
+            const bairro = document.getElementById('filterBairro').value;
+            const tipo = document.getElementById('filterTipo').value;
+
+            // Filtrar bairros conforme a cidade
+            if (cidade) {
+                const bairros = [...new Set(todosAtivos
+                    .filter(a => a.cidade === cidade)
+                    .map(a => a.bairro))].filter(Boolean).sort();
+
+                const selectBairro = document.getElementById('filterBairro');
+                selectBairro.innerHTML = '<option value="">Todos os Bairros</option>';
+                bairros.forEach(b => {
+                    const option = document.createElement('option');
+                    option.value = b;
+                    option.textContent = b;
+                    selectBairro.appendChild(option);
+                });
+
+                selectBairro.value = bairro;
+            }
+
+            // Filtrar activos
+            let ativosFiltrados = ativosComDanos.filter(a => {
+                return (!cidade || a.cidade === cidade) &&
+                       (!bairro || a.bairro === bairro) &&
+                       (!tipo || a.tipo === tipo);
+            });
+
+            // Mostrar/ocultar filtros aplicados
+            const temFiltros = cidade || bairro || tipo;
+            document.getElementById('filtrosAplicados').style.display = temFiltros ? 'block' : 'none';
+            if (temFiltros) {
+                document.getElementById('filtrosCidade').textContent = cidade || '-';
+                document.getElementById('filtrosBairro').textContent = bairro || '-';
+                document.getElementById('filtrosTipo').textContent = tipo || '-';
+            }
+
+            // Renderizar relatório
+            renderizarRelatorio(ativosFiltrados);
+            atualizarEstatisticas(ativosFiltrados);
+        }
+
+        // ==================== RENDERIZAR RELATÓRIO ====================
+        function renderizarRelatorio(ativos) {
+            const container = document.getElementById('listadoAtivos');
+
+            if (ativos.length === 0) {
+                container.innerHTML = '<p>Nenhum activo com danos encontrado</p>';
+                return;
+            }
+
+            container.innerHTML = ativos.map((ativo, index) => `
+                <div class="ativo-card">
+                    <div class="ativo-title">📍 Activo ${index + 1}</div>
+                    <div class="ativo-tipo">Tipo: <strong>${ativo.tipo}</strong></div>
+                    <div class="ativo-localizacao">
+                        Localização: <strong>${ativo.cidade}</strong>, ${ativo.bairro}
+                    </div>
+                    <div class="ativo-coords">
+                        Coordenadas GPS: ${ativo.latitude.toFixed(6)}, ${ativo.longitude.toFixed(6)}
+                    </div>
+
+                    <div class="componentes-label">Componentes Danificados (${ativo.componentes.length})</div>
+                    ${ativo.componentes.map(comp => `
+                        <div class="componente-item">
+                            <span class="componente-nome">• ${comp.nome}</span>
+                            <span class="status-badge">Danificado</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+        }
+
+        // ==================== ATUALIZAR ESTATÍSTICAS ====================
+        function atualizarEstatisticas(ativosFiltrados) {
+            const totalDano = ativosFiltrados.length;
+            const totalComponentes = ativosFiltrados.reduce((acc, a) => acc + a.componentes.length, 0);
+            const taxaDano = todosAtivos.length > 0 ? Math.round((totalDano / todosAtivos.length) * 100) : 0;
+
+            document.getElementById('totalAtivos').textContent = todosAtivos.length;
+            document.getElementById('ativosComDano').textContent = totalDano;
+            document.getElementById('componentesDanificados').textContent = totalComponentes;
+            document.getElementById('taxaDano').textContent = `${taxaDano}%`;
+        }
+
+        // ==================== EXPORTAR PDF ====================
+        function exportarPDF() {
+            const element = document.getElementById('relatorioConteudo');
+            const opt = {
+                margin: 10,
+                filename: `Relatorio_Activos_${new Date().toISOString().slice(0, 10)}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+            mostrarNotificacao('PDF exportado com sucesso!', 'info');
+        }
+
+        // ==================== EXPORTAR CSV ====================
+        function exportarCSV() {
+            const cidade = document.getElementById('filterCidade').value;
+            const bairro = document.getElementById('filterBairro').value;
+            const tipo = document.getElementById('filterTipo').value;
+
+            let ativosFiltrados = ativosComDanos.filter(a => {
+                return (!cidade || a.cidade === cidade) &&
+                       (!bairro || a.bairro === bairro) &&
+                       (!tipo || a.tipo === tipo);
+            });
+
+            let csv = 'ID,Tipo,Cidade,Bairro,Latitude,Longitude,Componente,Estado\n';
+
+            ativosFiltrados.forEach(ativo => {
+                ativo.componentes.forEach(comp => {
+                    csv += `${ativo.id},"${ativo.tipo}","${ativo.cidade}","${ativo.bairro}",${ativo.latitude},${ativo.longitude},"${comp.nome}",Danificado\n`;
+                });
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Relatorio_Activos_${new Date().toISOString().slice(0, 10)}.csv`;
+            link.click();
+
+            mostrarNotificacao('CSV exportado com sucesso!', 'info');
+        }
+
+        // ==================== LIMPAR FILTROS ====================
+        function limparFiltros() {
+            document.getElementById('filterCidade').value = '';
+            document.getElementById('filterBairro').value = '';
+            document.getElementById('filterTipo').value = '';
+            aplicarFiltros();
+            mostrarNotificacao('Filtros limpos', 'info');
+        }
+
+        // ==================== NOTIFICAÇÕES ====================
+        function mostrarNotificacao(mensagem, tipo = 'info') {
+            const notif = document.getElementById('notificacao');
+            notif.textContent = mensagem;
+            notif.className = `notificacao ${tipo}`;
+            notif.classList.add('active');
+
+            setTimeout(() => {
+                notif.classList.remove('active');
+            }, 3000);
+        }
+    </script>
+
+</body>
+</html>

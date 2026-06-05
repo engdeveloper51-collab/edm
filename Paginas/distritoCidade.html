@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cidade - Sistema GIS</title>
+    <link rel="stylesheet" href="responsive.css">
+<link rel="icon" type="image/x-icon" href="Imag/logo.ico">
+    <script src="config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, sans-serif;
+            background: #f5f5f5;
+            overflow-x: hidden;
+        }
+
+        .main {
+            padding: 12px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            flex: 1;
+            min-height: 0;
+            margin-bottom: 12px;
+        }
+
+        .grid-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .grid-header {
+            background: #ff8c00;
+            color: white;
+            padding: 4px 8px;
+            font-weight: 600;
+            font-size: 11px;
+            border-bottom: 2px solid #ff6600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            height: 26px;
+        }
+
+        .grid-body {
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #ff8c00;
+            color: white;
+            padding: 4px 6px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            height: 26px;
+            line-height: 1.1;
+        }
+
+        td {
+            padding: 5px 6px;
+            border-bottom: 1px solid #e8e8e8;
+            font-size: 10px;
+            height: 26px;
+            line-height: 1.3;
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background: #f5f8ff;
+        }
+
+        tbody tr.selecionado {
+            background: #fff3cd;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: white;
+            font-size: 10px;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .status-ativo {
+            background: #27ae60;
+        }
+
+        .form-section {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+            margin-bottom: 12px;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+            justify-content: flex-start;
+            margin-bottom: 65px;
+        }
+
+        button {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover:not(:disabled) {
+            background: #229954;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        button.secondary {
+            background: #3498db;
+        }
+
+        button.secondary:hover {
+            background: #2980b9;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        button.cancel {
+            background: #95a5a6;
+        }
+
+        button.cancel:hover {
+            background: #7f8c8d;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .modal {
+            display: none !important;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex !important;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 90%;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 600;
+            color: #555;
+            font-size: 11px;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 11px;
+            box-sizing: border-box;
+        }
+
+        select:focus,
+        input:focus {
+            outline: none;
+            border-color: #ff8c00;
+            box-shadow: 0 0 5px rgba(255, 140, 0, 0.3);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            justify-content: center;
+            padding: 6px 10px;
+            font-size: 10px;
+        }
+
+        .notificacao {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            max-width: 300px;
+            padding: 10px;
+            background: #27ae60;
+            color: white;
+            border-radius: 4px;
+            display: none;
+            z-index: 3000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s ease;
+            font-size: 11px;
+        }
+
+        .notificacao.error {
+            background: #e74c3c;
+        }
+
+        .notificacao.info {
+            background: #3498db;
+        }
+
+        .notificacao.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #ff8c00;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+        }
+
+        .action-buttons button {
+            padding: 3px 8px;
+            font-size: 10px;
+            margin: 0;
+        }
+
+        /* Desktop */
+        @media (min-width: 1200px) {
+            .container {
+                width: min(100%, 960px);
+            }
+
+            .form-section {
+                width: 100%;
+            }
+
+            .button-container {
+                width: 100%;
+            }
+        }
+
+        /* Tablets - Mantém 100% da largura com scroll se necessário */
+        @media (max-width: 1024px) {
+            .main {
+                padding: 8px;
+            }
+
+            .container {
+                width: 95%;
+                height: 300px;
+                margin-bottom: 8px;
+            }
+
+            .form-section {
+                width: 95%;
+                margin-bottom: 8px;
+                padding: 10px;
+            }
+
+            .button-container {
+                width: 95%;
+                gap: 6px;
+            }
+
+            .grid-header {
+                padding: 3px 6px;
+                font-size: 10px;
+                height: 24px;
+            }
+
+            th {
+                padding: 3px 5px;
+                font-size: 9px;
+                height: 24px;
+            }
+
+            td {
+                padding: 4px 5px;
+                font-size: 9px;
+                height: 24px;
+            }
+
+            label {
+                font-size: 10px;
+            }
+
+            input,
+            select {
+                font-size: 10px;
+                padding: 5px;
+            }
+
+            button {
+                padding: 5px 10px;
+                font-size: 10px;
+            }
+
+            .form-group {
+                margin-bottom: 10px;
+            }
+        }
+
+        /* Mobile - Ajustes para telas pequenas */
+        @media (max-width: 768px) {
+            .main {
+                padding: 6px;
+            }
+
+            .container {
+                width: 100%;
+                height: 250px;
+                margin-bottom: 8px;
+            }
+
+            .form-section {
+                width: 100%;
+                margin-bottom: 8px;
+                padding: 8px;
+            }
+
+            .button-container {
+                width: 100%;
+                gap: 6px;
+            }
+
+            .grid-header {
+                padding: 2px 5px;
+                font-size: 9px;
+                height: 22px;
+            }
+
+            th {
+                padding: 2px 4px;
+                font-size: 8px;
+                height: 22px;
+            }
+
+            td {
+                padding: 3px 4px;
+                font-size: 8px;
+                height: 22px;
+            }
+
+            label {
+                font-size: 9px;
+            }
+
+            input,
+            select {
+                font-size: 9px;
+                padding: 4px;
+            }
+
+            button {
+                padding: 4px 8px;
+                font-size: 9px;
+            }
+        }
+
+        /* Mobile muito pequeno */
+        @media (max-width: 480px) {
+            .main {
+                padding: 4px;
+            }
+
+            .container {
+                width: 100%;
+                height: 200px;
+                margin-bottom: 6px;
+            }
+
+            .form-section {
+                width: 100%;
+                margin-bottom: 6px;
+                padding: 6px;
+            }
+
+            .button-container {
+                width: 100%;
+                gap: 4px;
+            }
+
+            .grid-header {
+                padding: 2px 3px;
+                font-size: 8px;
+                height: 20px;
+            }
+
+            th {
+                padding: 2px 3px;
+                font-size: 7px;
+                height: 20px;
+            }
+
+            td {
+                padding: 2px 3px;
+                font-size: 7px;
+                height: 20px;
+            }
+
+            .form-group {
+                margin-bottom: 6px;
+            }
+
+            label {
+                font-size: 8px;
+                margin-bottom: 2px;
+            }
+
+            input,
+            select {
+                font-size: 8px;
+                padding: 3px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main">
+        <!-- GRID DE CIDADES -->
+        <div class="container">
+            <div class="grid-section">
+                <div class="grid-header">
+                    <span>Cidades</span>
+                    <span id="contadorCidades" style="font-size: 10px;"></span>
+                </div>
+                <div class="grid-body">
+                    <table id="tableCidades">
+                        <thead>
+                            <tr>
+                                <th style="width: 25px;">Sel</th>
+                                <th>Distrito / Cidade</th>
+                                <th>Província</th>
+                                <th style="width: 60px;">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyCidades">
+                            <tr>
+                                <td colspan="4" style="text-align: center; color: #999;">
+                                    <div class="loading"></div> Carregando...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORMULÁRIO DE ENTRADA -->
+        <div class="form-section">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label>Distrito / Cidade</label>
+                    <input type="text" id="txtCidade" placeholder="Digite o nome da cidade">
+                </div>
+                <div class="form-group">
+                    <label>Província</label>
+                    <select id="cbxProvincia">
+                        <option value="">Seleccione uma província...</option>
+                        <option value="Nampula">Nampula</option>
+                        <option value="Cabo Delgado">Cabo Delgado</option>
+                        <option value="Niassa">Niassa</option>
+                        <option value="Zambézia">Zambézia</option>
+                        <option value="Manica">Manica</option>
+                        <option value="Tete">Tete</option>
+                        <option value="Inhambane">Inhambane</option>
+                        <option value="Gaza">Gaza</option>
+                        <option value="Sofala">Sofala</option>
+                        <option value="Maputo Cidade">Maputo Cidade</option>
+                        <option value="Maputo Província">Maputo Província</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTÕES DE AÇÃO -->
+        <div class="button-container">
+            <button onclick="novoRegistro()" title="Criar nova cidade">
+                ➕ Novo
+            </button>
+            <button class="secondary" onclick="editarCidade()" title="Editar a cidade selecionada">
+                ✏️ Editar
+            </button>
+            <button onclick="salvarCidade()" title="Salvar a cidade">
+                💾 Salvar
+            </button>
+            <button class="cancel" onclick="limparFormulario()" title="Limpar campos">
+                🗑️ Limpar
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO DE DELETAR -->
+    <div class="modal" id="modalConfirmar">
+        <div class="modal-content">
+            <div class="modal-header">Confirmar Exclusão</div>
+            <p style="margin-bottom: 15px; font-size: 11px; color: #555;">
+                Tem certeza que deseja deletar esta cidade?
+            </p>
+            <p id="nomeADeletar" style="margin-bottom: 15px; font-weight: 600; color: #ff8c00; font-size: 11px;"></p>
+            <div class="modal-buttons">
+                <button class="cancel" onclick="fecharModal('modalConfirmar')">Não, Cancelar</button>
+                <button class="cancel" style="background: #e74c3c;" onclick="confirmarDelecao()">Sim, Deletar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICAÇÕES -->
+    <div id="notificacao" class="notificacao"></div>
+
+    <script>
+        (function () {
+            const body = document.body;
+            body.style.opacity = '0';
+            body.style.transition = 'opacity 0.45s ease';
+
+            window.addEventListener('load', () => {
+                requestAnimationFrame(() => {
+                    body.style.opacity = '1';
+                });
+            });
+        })();
+
+        // ==================== CONFIGURAÇÃO ====================
+        const API_URL = `${API_BASE_URL}/api`;
+
+        // ==================== VARIÁVEIS ====================
+        let cidades = [];
+        let cidadeSelecionada = null;
+        let modo = 'novo'; // 'novo' ou 'editar'
+        let cidadeADeletar = null;
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarCidades();
+            document.addEventListener('click', fecharModalAoClicarFora);
+        });
+
+        // ==================== FECHAR MODAL AO CLICAR FORA ====================
+        function fecharModalAoClicarFora(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        }
+
+        // ==================== CARREGAR CIDADES ====================
+        async function carregarCidades() {
+            try {
+                mostrarNotificacao('Carregando cidades...', 'info');
+
+                const response = await fetch(`${API_URL}/cidades-completo`);
+
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+
+                cidades = await response.json();
+                renderizarTabelaCidades(cidades);
+                mostrarNotificacao(`${cidades.length} cidades carregadas com sucesso!`, 'info');
+            } catch (error) {
+                console.error('Erro:', error);
+                mostrarNotificacao(`Erro ao carregar cidades: ${error.message}`, 'error');
+            }
+        }
+
+        // ==================== RENDERIZAR TABELA ====================
+        function renderizarTabelaCidades(listaCidades) {
+            const tbody = document.getElementById("tbodyCidades");
+            tbody.innerHTML = '';
+
+            if (listaCidades.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #999;">Nenhuma cidade encontrada</td></tr>';
+                document.getElementById("contadorCidades").textContent = '(0)';
+                return;
+            }
+
+            listaCidades.forEach(cidade => {
+                const tr = document.createElement('tr');
+                tr.className = `linha-${cidade.id}`;
+                tr.innerHTML = `
+                    <td>
+                        <input type="radio" name="cidade" value="${cidade.id}" onchange="selecionarCidade(${cidade.id}, '${cidade.cidade.replace(/'/g, "\\'")}', '${cidade.Provincia.replace(/'/g, "\\'")}')" />
+                    </td>
+                    <td>${cidade.cidade}</td>
+                    <td>${cidade.Provincia}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="secondary" onclick="deletarCidade(event, ${cidade.id}, '${cidade.cidade.replace(/'/g, "\\'")}')" title="Deletar">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById("contadorCidades").textContent = `(${listaCidades.length})`;
+        }
+
+        // ==================== SELECIONAR CIDADE ====================
+        function selecionarCidade(id, nome, provincia) {
+            cidadeSelecionada = { id, nome, provincia };
+            modo = 'editar';
+
+            // Destacar linha
+            document.querySelectorAll('#tbodyCidades tr').forEach(tr => tr.classList.remove('selecionado'));
+            document.querySelector(`.linha-${id}`).classList.add('selecionado');
+
+            mostrarNotificacao(`Cidade selecionada: ${nome}`, 'info');
+        }
+
+        // ==================== NOVO REGISTRO ====================
+        function novoRegistro() {
+            limparFormulario();
+            modo = 'novo';
+            document.getElementById('txtCidade').focus();
+            document.querySelectorAll('#tbodyCidades tr').forEach(tr => tr.classList.remove('selecionado'));
+            mostrarNotificacao('Nova cidade', 'info');
+        }
+
+        // ==================== EDITAR CIDADE ====================
+        function editarCidade() {
+            if (!cidadeSelecionada) {
+                mostrarNotificacao('Seleccione uma cidade para editar', 'error');
+                return;
+            }
+
+            document.getElementById('txtCidade').value = cidadeSelecionada.nome;
+            document.getElementById('cbxProvincia').value = cidadeSelecionada.provincia;
+            document.getElementById('txtCidade').focus();
+            modo = 'editar';
+        }
+
+        // ==================== SALVAR CIDADE ====================
+        async function salvarCidade() {
+            const txtCidade = document.getElementById('txtCidade').value.trim();
+            const cbxProvincia = document.getElementById('cbxProvincia').value;
+
+            if (!txtCidade || !cbxProvincia) {
+                mostrarNotificacao('Preencha todos os campos obrigatórios', 'error');
+                return;
+            }
+
+            try {
+                const payload = {
+                    cidade: primeiraLetraMaiuscula(txtCidade),
+                    Provincia: cbxProvincia
+                };
+
+                const url = modo === 'editar'
+                    ? `${API_URL}/cidades/${cidadeSelecionada.id}`
+                    : `${API_URL}/cidades`;
+
+                const method = modo === 'editar' ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const erro = await response.json();
+                    throw new Error(erro.error || 'Erro desconhecido');
+                }
+
+                mostrarNotificacao(
+                    modo === 'editar'
+                        ? 'Cidade atualizada com sucesso!'
+                        : 'Cidade criada com sucesso!',
+                    'info'
+                );
+
+                limparFormulario();
+                carregarCidades();
+                modo = 'novo';
+            } catch (error) {
+                console.error('Erro:', error);
+                mostrarNotificacao(`Erro ao salvar: ${error.message}`, 'error');
+            }
+        }
+
+        // ==================== DELETAR CIDADE ====================
+        function deletarCidade(event, id, nome) {
+            event.stopPropagation();
+            cidadeADeletar = { id, nome };
+            document.getElementById('nomeADeletar').textContent = `Cidade: ${nome}`;
+            document.getElementById('modalConfirmar').classList.add('active');
+        }
+
+        async function confirmarDelecao() {
+            try {
+                const response = await fetch(`${API_URL}/cidades/${cidadeADeletar.id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro ao deletar');
+                }
+
+                mostrarNotificacao('Cidade deletada com sucesso!', 'info');
+                fecharModal('modalConfirmar');
+                carregarCidades();
+                limparFormulario();
+            } catch (error) {
+                console.error('Erro:', error);
+                mostrarNotificacao(`Erro ao deletar: ${error.message}`, 'error');
+            }
+        }
+
+        // ==================== LIMPAR FORMULÁRIO ====================
+        function limparFormulario() {
+            document.getElementById('txtCidade').value = '';
+            document.getElementById('cbxProvincia').value = '';
+            cidadeSelecionada = null;
+            modo = 'novo';
+            document.querySelectorAll('#tbodyCidades tr').forEach(tr => tr.classList.remove('selecionado'));
+        }
+
+        // ==================== PRIMEIRA LETRA MAIÚSCULA ====================
+        function primeiraLetraMaiuscula(texto) {
+            if (!texto) return texto;
+            return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+        }
+
+        // ==================== FECHAR MODAL ====================
+        function fecharModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // ==================== NOTIFICAÇÕES ====================
+        function mostrarNotificacao(mensagem, tipo = 'info') {
+            const notif = document.getElementById('notificacao');
+            notif.textContent = mensagem;
+            notif.className = `notificacao ${tipo}`;
+            notif.classList.add('active');
+
+            setTimeout(() => {
+                notif.classList.remove('active');
+            }, 3000);
+        }
+    </script>
+
+</body>
+
+</html>

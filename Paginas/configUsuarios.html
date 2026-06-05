@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações de Usuário - Sistema GIS</title>
+    <link rel="stylesheet" href="responsive.css">
+    <link rel="icon" type="image/x-icon" href="Imag/logo.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #202135;
+            overflow-x: hidden;
+        }
+
+        img,
+        video,
+        canvas,
+        iframe {
+            max-width: 100%;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 12px;
+            min-height: 100vh;
+        }
+
+        /* ==================== AVISO RESTRICTION ==================== */
+        .restriction-warning {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: none;
+            border-left: 5px solid #d32f2f;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .restriction-warning.active {
+            display: block;
+        }
+
+        .restriction-warning strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+
+        .restriction-warning p {
+            font-size: 12px;
+            margin: 0;
+        }
+
+        /* ==================== FORM SECTION ==================== */
+        .form-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .form-title {
+            color: #ff8c00;
+            font-size: 16px;
+            font-weight: bold;
+            border-bottom: 2px solid #ff8c00;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        label {
+            font-weight: 600;
+            color: #333;
+            font-size: 12px;
+            letter-spacing: 0.3px;
+        }
+
+        input,
+        select {
+            padding: 7px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: 'Segoe UI', sans-serif;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            height: 32px;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #ff8c00;
+            box-shadow: 0 0 8px rgba(255, 140, 0, 0.2);
+            background: #fff9f5;
+        }
+
+        input:disabled,
+        select:disabled {
+            background: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+            border-color: #ddd;
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff8c00' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 18px;
+            padding-right: 30px;
+        }
+
+        select:disabled {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        }
+
+        /* ==================== BUTTONS ==================== */
+        .button-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #ff8c00 0%, #e55a1a 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: 0.3px;
+            height: 32px;
+        }
+
+        button:hover:not(:disabled) {
+            background: linear-gradient(135deg, #e55a1a 0%, #d44a0a 100%);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        button.secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+
+        button.secondary:hover {
+            background: linear-gradient(135deg, #7f8c8d 0%, #677f86 100%);
+        }
+
+        button.secondary:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        /* ==================== TABLE SECTION ==================== */
+        .table-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            overflow-x: auto;
+            display: none;
+        }
+
+        .table-section.active {
+            display: block;
+        }
+
+        .table-title {
+            color: #ff8c00;
+            font-size: 16px;
+            font-weight: bold;
+            border-bottom: 2px solid #ff8c00;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        thead {
+            background-color: #ff8c00;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 7px 6px;
+            text-align: left;
+            border: 1px solid #ff6600;
+            white-space: nowrap;
+            font-size: 11px;
+            height: 32px;
+        }
+
+        td {
+            padding: 6px 6px;
+            border-bottom: 1px solid #e8e8e8;
+            color: #333;
+            border-right: 1px solid #f0f0f0;
+            height: 32px;
+        }
+
+        tbody tr {
+            background-color: white;
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tbody tr:hover {
+            background-color: #fff3cd;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 4px;
+            height: 100%;
+            align-items: center;
+        }
+
+        .btn-edit,
+        .btn-delete,
+        .btn-toggle-senha {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            white-space: nowrap;
+        }
+
+        .btn-edit {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-toggle-senha {
+            background-color: #9b59b6;
+            color: white;
+            padding: 4px 6px;
+            min-width: 26px;
+        }
+
+        .btn-toggle-senha:hover {
+            background-color: #8e44ad;
+        }
+
+        .btn-toggle-senha i {
+            font-size: 12px;
+        }
+
+        /* ==================== NOTIFICAÇÕES ==================== */
+        .notificacao {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            max-width: 90%;
+            padding: 12px 16px;
+            background: #27ae60;
+            color: white;
+            border-radius: 4px;
+            display: none;
+            z-index: 3000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s ease;
+            font-size: 12px;
+            letter-spacing: 0.3px;
+        }
+
+        .notificacao.error {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .notificacao.info {
+            background: linear-gradient(135deg, #ff8c00 0%, #e55a1a 100%);
+        }
+
+        .notificacao.success {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+
+        .notificacao.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .loading {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 13px;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 1024px) {
+            .form-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-section,
+            .table-section {
+                padding: 12px;
+            }
+
+            table {
+                font-size: 10px;
+            }
+
+            th,
+            td {
+                padding: 5px 4px;
+                height: 28px;
+            }
+
+            button {
+                font-size: 11px;
+                padding: 6px 12px;
+                height: 28px;
+            }
+
+            input,
+            select {
+                height: 28px;
+                padding: 6px 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .button-container {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn-edit,
+            .btn-delete {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- AVISO DE RESTRIÇÃO -->
+        <div class="restriction-warning" id="restrictionWarning">
+            <strong>⚠️ Acesso Restrito</strong>
+            <p>Você tem privilégios limitados. Pode editar apenas sua própria senha.</p>
+        </div>
+
+        <!-- FORM SECTION -->
+        <div class="form-section">
+            <label class="form-title">📋 Dados do Usuário</label>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="username">Nome de Usuário:</label>
+                    <input type="text" id="username" placeholder="Digite o nome do usuário">
+                </div>
+                <div class="form-group">
+                    <label for="senha">Senha:</label>
+                    <input type="password" id="senha" placeholder="Digite a senha">
+                </div>
+                <div class="form-group">
+                    <label for="nivelAcesso">Nível de Privilégio:</label>
+                    <select id="nivelAcesso">
+                        <option value="">-- Seleccione --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <button id="btnNovo" onclick="novoUsuario()" title="Novo usuário">➕ Novo Usuário</button>
+                <button onclick="salvarUsuario()" title="Salvar usuário">✓ Salvar</button>
+                <button class="secondary" onclick="limparFormulario()" title="Limpar formulário">✕ Limpar</button>
+                <button class="secondary" onclick="cancelarEdicao()" id="btnCancelar" style="display: none;"
+                    title="Cancelar edição">Cancelar</button>
+            </div>
+        </div>
+
+        <!-- TABLE SECTION -->
+        <div class="table-section" id="tableSection">
+            <label class="table-title">📊 Lista de Usuários</label>
+
+            <div style="overflow-x: auto;">
+                <table id="tabelaUsuarios">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">ID</th>
+                            <th>Nome de Usuário</th>
+                            <th>Senha</th>
+                            <th>Nível de Privilégio</th>
+                            <th style="width: 120px;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyUsuarios">
+                        <tr>
+                            <td colspan="4" class="empty-message">Carregando usuários...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICAÇÕES -->
+    <div id="notificacao" class="notificacao"></div>
+
+    <script>
+        (function () {
+            const body = document.body;
+            body.style.opacity = '0';
+            body.style.transition = 'opacity 0.45s ease';
+
+            window.addEventListener('load', () => {
+                requestAnimationFrame(() => {
+                    body.style.opacity = '1';
+                });
+            });
+        })();
+
+        // ==================== CONFIGURAÇÃO ====================
+        const API_URL = `${API_BASE_URL}/api`;
+        let usuarioSelecionado = null;
+        let editandoId = null;
+        let usuarioAtual = null;
+        let isAdmin = false;
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Aplicação iniciada');
+            extrairUsuarioParams();
+            carregarNiveisAcesso();
+            carregarUsuarios();
+        });
+
+        // ==================== EXTRAIR PARÂMETRO USER DA URL ====================
+        function extrairUsuarioParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            usuarioAtual = urlParams.get('user');
+
+            if (!usuarioAtual) {
+                mostrarNotificacao('Erro: Usuário não identificado', 'error');
+                return;
+            }
+
+            console.log(`✓ Usuário atual: ${usuarioAtual}`);
+
+            // Verificar se é admin (será feito após carregar usuários)
+        }
+
+        // ==================== CARREGAR NÍVEIS DE ACESSO ====================
+        async function carregarNiveisAcesso() {
+            try {
+                const response = await fetch(`${API_URL}/niveis-acesso`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const niveis = await response.json();
+                const select = document.getElementById('nivelAcesso');
+                select.innerHTML = '<option value="">-- Seleccione --</option>';
+
+                niveis.forEach(nivel => {
+                    const option = document.createElement('option');
+                    option.value = nivel.id;
+                    option.textContent = nivel.desc_nivel_acesso;
+                    select.appendChild(option);
+                });
+
+                console.log(`✅ ${niveis.length} níveis de acesso carregados`);
+            } catch (error) {
+                console.error('Erro ao carregar níveis:', error);
+                mostrarNotificacao('Erro ao carregar níveis de acesso', 'error');
+            }
+        }
+
+        // ==================== CARREGAR USUÁRIOS ====================
+        async function carregarUsuarios() {
+            try {
+                console.log('Carregando usuários...');
+                const response = await fetch(`${API_URL}/usuarios`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const usuarios = await response.json();
+
+                // Verificar se usuário atual é admin
+                const usuarioAdmin = usuarios.find(u => u.username.toLowerCase() === usuarioAtual.toLowerCase() &&
+                    (u.desc_nivel_acesso === 'admin' || u.desc_nivel_acesso === 'Admin'));
+
+                isAdmin = !!usuarioAdmin;
+                console.log(`✓ Status Admin: ${isAdmin}`);
+
+                // Aplicar restrições
+                aplicarRestricoesUI();
+
+                // Se é USER, mostrar apenas seu usuário
+                if (!isAdmin) {
+                    const usuarioFiltrado = usuarios.filter(u => u.username.toLowerCase() === usuarioAtual.toLowerCase());
+                    exibirTabela(usuarioFiltrado);
+                } else {
+                    exibirTabela(usuarios);
+                }
+
+                console.log(`✅ ${usuarios.length} usuários carregados`);
+            } catch (error) {
+                console.error('Erro ao carregar usuários:', error);
+                mostrarNotificacao('Erro ao carregar usuários', 'error');
+            }
+        }
+
+        // ==================== EXIBIR TABELA ====================
+        function exibirTabela(usuarios) {
+            const tbody = document.getElementById('tbodyUsuarios');
+            tbody.innerHTML = '';
+
+            if (usuarios.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="empty-message">Nenhum usuário encontrado</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            usuarios.forEach(usuario => {
+                const tr = document.createElement('tr');
+                const senhaId = `senha-${usuario.id}`;
+                // Tenta diferentes nomes de campo para a senha
+                const senhaValor = usuario.password || usuario.senha || usuario.passwd || '';
+                const ehHasheada = senhaValor.startsWith('$2a$') || senhaValor.startsWith('$2b$') || senhaValor.startsWith('$2y$');
+                const senhaMascarada = senhaValor ? '•'.repeat(Math.min(senhaValor.length, 8)) : '****';
+                
+                console.log(`Usuário: ${usuario.username}, Senha hasheada:`, ehHasheada);
+                
+                // Se a senha é hasheada, mostra mensagem especial
+                const conteudoSenha = ehHasheada 
+                    ? `<code style="background: #ffe6e6; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 11px; color: #d32f2f;" title="Esta senha está criptografada (bcrypt) e não pode ser recuperada. Use 'Editar' para resetar a senha.">🔒 HASHEADA</code>`
+                    : `<code id="${senhaId}" style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 11px; cursor: text; user-select: all;" data-senha="${senhaValor}" data-mascarada="${senhaMascarada}">${senhaMascarada}</code>`;
+                
+                tr.innerHTML = `
+                    <td>${usuario.id}</td>
+                    <td>${usuario.username}</td>
+                    <td>
+                        ${conteudoSenha}
+                    </td>
+                    <td>${usuario.desc_nivel_acesso || 'N/A'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            ${!ehHasheada ? `
+                            <button class="btn-toggle-senha" onclick="toggleSenha(${usuario.id}, '${senhaId}')" title="Mostrar/Ocultar senha">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ` : `
+                            <button class="btn-toggle-senha" disabled title="Senha hasheada - não pode ser exibida" style="opacity: 0.5; cursor: not-allowed;">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                            `}
+                            <button class="btn-edit" onclick="editarUsuario(${usuario.id}, '${usuario.username.replace(/'/g, "\\'")}', ${usuario.Id_nivel_acesso})">✏️ Editar</button>
+                            ${isAdmin ? `<button class="btn-delete" onclick="deletarUsuario(${usuario.id})">🗑️ Deletar</button>` : ''}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ==================== APLICAR RESTRIÇÕES UI ====================
+        function aplicarRestricoesUI() {
+            const restrictionWarning = document.getElementById('restrictionWarning');
+            const btnNovo = document.getElementById('btnNovo');
+            const tableSection = document.getElementById('tableSection');
+
+            if (isAdmin) {
+                // ADMIN: Mostrar tudo
+                restrictionWarning.classList.remove('active');
+                btnNovo.disabled = false;
+                tableSection.classList.add('active');
+                document.getElementById('username').disabled = false;
+                document.getElementById('nivelAcesso').disabled = false;
+            } else {
+                // USER: Restringir
+                restrictionWarning.classList.add('active');
+                btnNovo.disabled = true;
+                tableSection.classList.add('active');
+                document.getElementById('username').disabled = true;
+                document.getElementById('nivelAcesso').disabled = true;
+
+                // Carregar dados do usuário atual no formulário
+                carregarMeuUsuario();
+            }
+        }
+
+        // ==================== CARREGAR MEU USUÁRIO ====================
+        async function carregarMeuUsuario() {
+            try {
+                const response = await fetch(`${API_URL}/usuarios`);
+                const usuarios = await response.json();
+
+                const meuUsuario = usuarios.find(u => u.username.toLowerCase() === usuarioAtual.toLowerCase());
+
+                if (meuUsuario) {
+                    document.getElementById('username').value = meuUsuario.username;
+                    document.getElementById('nivelAcesso').value = meuUsuario.Id_nivel_acesso;
+                    editandoId = meuUsuario.id;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar meu usuário:', error);
+            }
+        }
+
+        // ==================== NOVO USUÁRIO ====================
+        function novoUsuario() {
+            if (!isAdmin) {
+                mostrarNotificacao('Você não tem permissão para criar usuários', 'error');
+                return;
+            }
+            editandoId = null;
+            document.getElementById('btnCancelar').style.display = 'none';
+            limparFormulario();
+            document.getElementById('username').focus();
+        }
+
+        // ==================== SALVAR USUÁRIO ====================
+        async function salvarUsuario() {
+            const username = document.getElementById('username').value.trim();
+            const senha = document.getElementById('senha').value.trim();
+            const nivelAcesso = document.getElementById('nivelAcesso').value;
+
+            // USER: só pode editar sua própria senha
+            if (!isAdmin) {
+                if (!senha) {
+                    mostrarNotificacao('Digite a nova senha', 'error');
+                    return;
+                }
+
+                const btnSalvar = event.target;
+                btnSalvar.disabled = true;
+                btnSalvar.classList.add('loading');
+
+                try {
+                    const response = await fetch(`${API_URL}/usuarios/${editandoId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            senha: senha,
+                            Id_nivel_acesso: parseInt(nivelAcesso)
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const erro = await response.json();
+                        throw new Error(erro.details || erro.error || 'Erro ao salvar usuário');
+                    }
+
+                    mostrarNotificacao('Senha atualizada com sucesso!', 'success');
+                    document.getElementById('senha').value = '';
+
+                } catch (error) {
+                    console.error('Erro:', error);
+                    mostrarNotificacao(`Erro: ${error.message}`, 'error');
+                } finally {
+                    btnSalvar.disabled = false;
+                    btnSalvar.classList.remove('loading');
+                }
+                return;
+            }
+
+            // ADMIN: pode criar e editar normalmente
+            if (!username || !senha || !nivelAcesso) {
+                mostrarNotificacao('Preencha todos os campos obrigatórios', 'error');
+                return;
+            }
+
+            const btnSalvar = event.target;
+            btnSalvar.disabled = true;
+            btnSalvar.classList.add('loading');
+
+            try {
+                const method = editandoId ? 'PUT' : 'POST';
+                const url = editandoId ? `${API_URL}/usuarios/${editandoId}` : `${API_URL}/usuarios`;
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        senha: senha,
+                        Id_nivel_acesso: parseInt(nivelAcesso)
+                    })
+                });
+
+                if (!response.ok) {
+                    const erro = await response.json();
+                    throw new Error(erro.details || erro.error || 'Erro ao salvar usuário');
+                }
+
+                mostrarNotificacao(editandoId ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!', 'success');
+                limparFormulario();
+                cancelarEdicao();
+                carregarUsuarios();
+
+            } catch (error) {
+                console.error('Erro:', error);
+                mostrarNotificacao(`Erro: ${error.message}`, 'error');
+            } finally {
+                btnSalvar.disabled = false;
+                btnSalvar.classList.remove('loading');
+            }
+        }
+
+        // ==================== EDITAR USUÁRIO ====================
+        // ==================== TOGGLE MOSTRAR/OCULTAR SENHA ====================
+        function toggleSenha(usuarioId, senhaElementId) {
+            const elemento = document.getElementById(senhaElementId);
+            const botao = event.target.closest('.btn-toggle-senha');
+            const icone = botao.querySelector('i');
+
+            const senhaAtual = elemento.textContent;
+            const senhaMascarada = elemento.getAttribute('data-mascarada');
+            const senhaReal = elemento.getAttribute('data-senha');
+
+            if (senhaAtual === senhaMascarada) {
+                // Mostrar senha
+                elemento.textContent = senhaReal;
+                icone.classList.remove('fa-eye');
+                icone.classList.add('fa-eye-slash');
+                botao.title = 'Ocultar senha';
+            } else {
+                // Ocultar senha
+                elemento.textContent = senhaMascarada;
+                icone.classList.remove('fa-eye-slash');
+                icone.classList.add('fa-eye');
+                botao.title = 'Mostrar senha';
+            }
+        }
+
+        function editarUsuario(id, username, nivelAcesso) {
+            if (!isAdmin) {
+                mostrarNotificacao('Você não tem permissão para editar outros usuários', 'error');
+                return;
+            }
+
+            if (confirm(`Deseja editar o usuário "${username}"?`)) {
+                editandoId = id;
+                document.getElementById('username').value = username;
+                document.getElementById('senha').value = '';
+                document.getElementById('nivelAcesso').value = nivelAcesso;
+                document.getElementById('btnCancelar').style.display = 'flex';
+                document.getElementById('username').focus();
+            }
+        }
+
+        // ==================== CANCELAR EDIÇÃO ====================
+        function cancelarEdicao() {
+            editandoId = null;
+            document.getElementById('btnCancelar').style.display = 'none';
+            limparFormulario();
+
+            if (!isAdmin) {
+                carregarMeuUsuario();
+            }
+        }
+
+        // ==================== DELETAR USUÁRIO ====================
+        async function deletarUsuario(id) {
+            if (!isAdmin) {
+                mostrarNotificacao('Você não tem permissão para deletar usuários', 'error');
+                return;
+            }
+
+            if (!confirm('Tem certeza que deseja deletar este usuário?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/usuarios/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const erro = await response.json();
+                    throw new Error(erro.error || 'Erro ao deletar usuário');
+                }
+
+                mostrarNotificacao('Usuário deletado com sucesso!', 'success');
+                carregarUsuarios();
+
+            } catch (error) {
+                console.error('Erro:', error);
+                mostrarNotificacao(`Erro: ${error.message}`, 'error');
+            }
+        }
+
+        // ==================== LIMPAR FORMULÁRIO ====================
+        function limparFormulario() {
+            if (!isAdmin) {
+                // USER: não limpar username e nivelAcesso
+                document.getElementById('senha').value = '';
+            } else {
+                // ADMIN: limpar tudo
+                document.getElementById('username').value = '';
+                document.getElementById('senha').value = '';
+                document.getElementById('nivelAcesso').value = '';
+            }
+        }
+
+        // ==================== NOTIFICAÇÕES ====================
+        function mostrarNotificacao(mensagem, tipo = 'info') {
+            const notif = document.getElementById('notificacao');
+            notif.textContent = mensagem;
+            notif.className = `notificacao ${tipo}`;
+            notif.classList.add('active');
+
+            setTimeout(() => {
+                notif.classList.remove('active');
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Sistema GIS</title>
+    <link rel="stylesheet" href="responsive.css">
+    <link rel="icon" type="image/x-icon" href="Imag/logo.ico">
+    <script src="config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, sans-serif;
+            background: #f5f5f5;
+            overflow-x: hidden;
+        }
+
+        img,
+        video,
+        canvas,
+        iframe {
+            max-width: 100%;
+        }
+
+        .main {
+            padding: 12px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-section {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 20px;
+            background: #fafafa;
+            align-items: start;
+        }
+
+        .form-section h2 {
+            color: #f26522;
+            font-size: 16px;
+            border-bottom: 2px solid #f26522;
+            padding-bottom: 10px;
+            font-weight: 600;
+            margin: 0;
+            grid-column: 1 / -1;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group-with-button {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .form-group-with-button .form-group {
+            flex: 1;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        label {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+        }
+
+        input,
+        select,
+        textarea {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: 'Segoe UI', sans-serif;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            height: 38px;
+        }
+
+        textarea {
+            height: auto;
+            min-height: 90px;
+            resize: vertical;
+            color: #666;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #f26522;
+            box-shadow: 0 0 8px rgba(242, 101, 34, 0.2);
+            background: #fff9f5;
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f26522' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 20px;
+            padding-right: 32px;
+        }
+
+        .image-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            grid-column: 1 / -1;
+            min-height: 180px;
+        }
+
+        .image-box {
+            border: 2px dashed #1e90ff;
+            border-radius: 8px;
+            padding: 30px 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #f9fbff 0%, #f5f9ff 100%);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .image-box:hover {
+            background: linear-gradient(135deg, #f0f5ff 0%, #e8f1ff 100%);
+            border-color: #3498db;
+            box-shadow: 0 4px 12px rgba(30, 144, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .image-box img {
+            max-width: 100%;
+            max-height: 140px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .image-box-title {
+            color: #1e90ff;
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 14px;
+            letter-spacing: 0.3px;
+        }
+
+        .image-placeholder {
+            color: #999;
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+
+        .btn-camera {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            width: auto;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-camera:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #1e6fa0 100%);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .btn-location {
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: auto;
+            flex-shrink: 0;
+        }
+
+        .btn-location.longitude {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .btn-location.longitude:hover:not(:disabled) {
+            background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .btn-location:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .btn-location.loading {
+            opacity: 0.7;
+            cursor: wait;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+
+        button {
+            background: linear-gradient(135deg, #f26522 0%, #e55a1a 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: 0.3px;
+        }
+
+        button:hover:not(:disabled) {
+            background: linear-gradient(135deg, #e55a1a 0%, #d44a0a 100%);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .notificacao {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            max-width: 90%;
+            padding: 14px 18px;
+            background: #f26522;
+            color: white;
+            border-radius: 4px;
+            display: none;
+            z-index: 3000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s ease;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+        }
+
+        .notificacao.error {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .notificacao.info {
+            background: linear-gradient(135deg, #f26522 0%, #e55a1a 100%);
+        }
+
+        .notificacao.success {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+
+        .notificacao.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            z-index: 5000;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            overflow-y: auto;
+        }
+
+        .video-container.active {
+            display: flex;
+        }
+
+        .video-content {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .video-header {
+            background: linear-gradient(135deg, #1e90ff 0%, #1873cc 100%);
+            color: white;
+            padding: 14px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 0.3px;
+            flex-shrink: 0;
+        }
+
+        #video {
+            width: 100%;
+            height: auto;
+            display: block;
+            max-height: 60vh;
+            object-fit: contain;
+            flex-shrink: 1;
+        }
+
+        #canvas {
+            display: none;
+        }
+
+        .video-buttons {
+            display: flex;
+            gap: 8px;
+            padding: 14px;
+            background: #f5f5f5;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+            justify-content: center;
+        }
+
+        .video-buttons button {
+            flex: 1;
+            min-width: 120px;
+            margin: 0;
+            justify-content: center;
+        }
+
+        .loading {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .precision-info {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        /* ===== RESPONSIVO ===== */
+        @media (max-width: 1024px) {
+            .container {
+                max-width: 100%;
+                padding: 18px;
+                gap: 18px;
+            }
+
+            .form-section {
+                padding: 16px;
+                gap: 16px;
+            }
+
+            .form-section h2 {
+                font-size: 15px;
+                padding-bottom: 8px;
+            }
+
+            label {
+                font-size: 12px;
+            }
+
+            input,
+            select,
+            textarea {
+                font-size: 12px;
+                padding: 9px 11px;
+            }
+
+            button {
+                font-size: 12px;
+                padding: 10px 20px;
+            }
+
+            .btn-location {
+                font-size: 11px;
+                padding: 9px 14px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 14px;
+                gap: 14px;
+            }
+
+            .form-section {
+                grid-template-columns: 1fr;
+                padding: 14px;
+                gap: 14px;
+            }
+
+            .form-section h2 {
+                font-size: 14px;
+                padding-bottom: 8px;
+            }
+
+            label {
+                font-size: 11px;
+            }
+
+            input,
+            select,
+            textarea {
+                font-size: 11px;
+                padding: 8px 10px;
+            }
+
+            textarea {
+                min-height: 80px;
+            }
+
+            button {
+                font-size: 11px;
+                padding: 9px 18px;
+            }
+
+            .btn-camera {
+                font-size: 11px;
+                padding: 8px 16px;
+            }
+
+            .btn-location {
+                font-size: 10px;
+                padding: 8px 12px;
+                gap: 4px;
+            }
+
+            .image-box {
+                padding: 24px 16px;
+                max-width: 280px;
+            }
+
+            .image-box img {
+                max-height: 120px;
+                margin-bottom: 12px;
+            }
+
+            .image-placeholder {
+                font-size: 40px;
+                margin-bottom: 8px;
+            }
+
+            .button-container {
+                padding: 14px;
+                gap: 10px;
+            }
+
+            .form-group-with-button {
+                flex-direction: column;
+            }
+
+            .form-group-with-button .form-group {
+                width: 100%;
+            }
+
+            .btn-location {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .video-content {
+                max-width: 95%;
+                max-height: 85vh;
+            }
+
+            #video {
+                max-height: 50vh;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main {
+                padding: 8px;
+            }
+
+            .container {
+                padding: 12px;
+                gap: 12px;
+            }
+
+            .form-section {
+                padding: 12px;
+                gap: 12px;
+            }
+
+            .form-section h2 {
+                font-size: 13px;
+                padding-bottom: 6px;
+            }
+
+            .form-group {
+                gap: 4px;
+            }
+
+            label {
+                font-size: 10px;
+            }
+
+            input,
+            select,
+            textarea {
+                font-size: 10px;
+                padding: 7px 9px;
+            }
+
+            textarea {
+                min-height: 70px;
+            }
+
+            button {
+                font-size: 10px;
+                padding: 8px 14px;
+                gap: 4px;
+            }
+
+            .btn-camera {
+                font-size: 10px;
+                padding: 7px 14px;
+            }
+
+            .btn-location {
+                font-size: 9px;
+                padding: 7px 10px;
+            }
+
+            .image-box {
+                padding: 16px 12px;
+                max-width: 100%;
+            }
+
+            .image-box img {
+                max-height: 100px;
+                margin-bottom: 10px;
+            }
+
+            .image-placeholder {
+                font-size: 35px;
+                margin-bottom: 6px;
+            }
+
+            .button-container {
+                padding: 12px;
+                gap: 8px;
+            }
+
+            .notificacao {
+                font-size: 11px;
+                padding: 10px 14px;
+            }
+
+            .video-header {
+                font-size: 13px;
+                padding: 12px;
+            }
+
+            .video-buttons {
+                gap: 6px;
+                padding: 12px;
+            }
+
+            .video-content {
+                max-width: 100%;
+                max-height: 90vh;
+                border-radius: 0;
+            }
+
+            #video {
+                max-height: 60vh;
+            }
+
+            .video-buttons button {
+                min-width: 100px;
+                font-size: 10px;
+                padding: 8px 10px;
+            }
+
+            .precision-info {
+                font-size: 9px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main">
+        <div class="container">
+
+            <!-- SEÇÃO ATIVO -->
+            <div class="form-section">
+                <h2>📋 Dados do Activo</h2>
+                <div class="form-group">
+                    <label>Código / Activo</label>
+                    <input type="text" id="codigoAtivo" placeholder="001">
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Activo</label>
+                    <select id="tipoAtivo" disabled>
+                        <option value="">-- Seleccione --</option>
+                        <option value="PT">PT</option>
+                        <option value="Poste De Ferro">Poste De Ferro</option>
+                        <option value="Poste De Madeira">Poste De Madeira</option>
+                        <option value="Poste De Betão">Poste De Betão</option>
+                        <option value="Linha De Alta Tensão">Linha De Alta Tensão</option>
+                        <option value="Linha De Média Tensão">Linha De Média Tensão</option>
+                        <option value="Linha De Baixa Tensão">Linha De Baixa Tensão</option>
+                        <option value="Linha Subterrânea">Linha Subterrânea</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- SEÇÃO LOCALIZAÇÃO -->
+            <div class="form-section">
+                <h2>🌍 Localização</h2>
+                <div class="form-group">
+                    <label>Distrito / Cidade</label>
+                    <select id="cidade" onchange="carregarBairros()">
+                        <option value="">-- Seleccione --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Área (Bairro)</label>
+                    <select id="bairro">
+                        <option value="">-- Seleccione --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Latitude</label>
+                    <input type="text" id="latitude" placeholder="-15,123456" onkeypress="validarCoordenada(event)"
+                        onblur="formatarCoordenada('latitude')">
+                    <div class="precision-info" id="latPrecision"></div>
+                </div>
+                <div class="form-group">
+                    <label>Longitude</label>
+                    <input type="text" id="longitude" placeholder="39,266700" onkeypress="validarCoordenada(event)"
+                        onblur="formatarCoordenada('longitude')">
+                    <div class="precision-info" id="lngPrecision"></div>
+                </div>
+                <div class="form-group-with-button" style="grid-column: 1 / -1;">
+                    <div></div>
+                    <button class="btn-location longitude" id="btnGPSLng" onclick="obterCoordenadas()"
+                        title="Obter localização do telefone" style="align-self: flex-start;">
+                        📍 GPS
+                    </button>
+                </div>
+            </div>
+
+            <!-- SEÇÃO COMPONENTES -->
+            <div class="form-section">
+                <h2>⚙️ Componentes</h2>
+                <div class="form-group">
+                    <label>Componentes do Activo</label>
+                    <textarea id="componentes" readonly></textarea>
+                </div>
+            </div>
+
+            <!-- SEÇÃO IMAGEM -->
+            <div class="form-section">
+                <h2>📷 Captura de Imagem</h2>
+                <div class="image-section">
+                    <div class="image-box" onclick="abrirCamera()">
+                        <div class="image-placeholder" id="cameraPlaceholder">📷</div>
+                        <img id="previewCamera" style="display:none;">
+                        <div class="image-box-title">Capturar Imagem</div>
+                        <button class="btn-camera" onclick="abrirCamera()">Abrir Câmera</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTÕES DE AÇÃO -->
+            <div class="button-container">
+                <button onclick="salvarCadastro()" title="Salvar cadastro">✓ Salvar</button>
+                <button onclick="novaArea()" title="Registar nova área">🔄 Nova Área</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CÂMERA MODAL -->
+    <div class="video-container" id="cameraModal">
+        <div class="video-content">
+            <div class="video-header">📸 Câmera</div>
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas"></canvas>
+            <div class="video-buttons">
+                <button onclick="capturarFoto()">📸 Capturar</button>
+                <button onclick="fecharCamera()">✕ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICAÇÕES -->
+    <div id="notificacao" class="notificacao"></div>
+
+    <script>
+        (function () {
+            const body = document.body;
+            body.style.opacity = '0';
+            body.style.transition = 'opacity 0.45s ease';
+
+            window.addEventListener('load', () => {
+                requestAnimationFrame(() => {
+                    body.style.opacity = '1';
+                });
+            });
+        })();
+
+        // ==================== CONFIGURAÇÃO ====================
+        const API_URL = `${API_BASE_URL}/api`;
+
+        const COMPONENTES_TIPOS = {
+            'Linha De Alta Tensão': ['Cabos', 'Torres', 'Isoladores', 'Pinça De Amarração', 'Ligadores Paralelos'],
+            'Linha De Média Tensão': ['Cabos', 'Isoladores', 'Postes', 'Ligadores Paralelos', 'Seccionadores', 'Drop outs', 'Travessas', 'Caixa Terminal', 'Caixa De Junção', 'Espias', 'Pinça De Amarração'],
+            'Linha De Baixa Tensão': ['Cabos', 'Postes', 'Espias', 'Pinça De Amarração', 'Pinça De Suspensão', 'Ferragem', 'Ligadores PC2'],
+            'Linha Subterrânea': ['Cabos', 'Isoladores', 'Postes', 'Ligadores Paralelos', 'Seccionadores', 'Drop outs', 'Travessas', 'Caixa Terminal', 'Caixa De Junção', 'Espias', 'Pinça De Amarração'],
+            'PT': ['Cabos', 'Postes'],
+            'Poste De Ferro': ['Cabos', 'Postes'],
+            'Poste De Madeira': ['Cabos', 'Postes'],
+            'Poste De Betão': ['Cabos', 'Postes']
+        };
+
+        const MAPEADOR_CODIGOS = {
+            '001': 'PT',
+            '002': 'Poste De Ferro',
+            '003': 'Poste De Madeira',
+            '004': 'Poste De Betão',
+            '005': 'Linha De Alta Tensão',
+            '006': 'Linha De Média Tensão',
+            '007': 'Linha De Baixa Tensão',
+            '008': 'Linha Subterrânea'
+        };
+
+        let imagemSelecionada = null;
+        let stream = null;
+        let localizacaoEmProgresso = false;
+        let watchId = null;
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarCidadesDoServidor();
+            document.getElementById('tipoAtivo').addEventListener('change', atualizarComponentes);
+            document.getElementById('codigoAtivo').addEventListener('change', mapeadorCodigo);
+        });
+
+        // ==================== CIDADES E BAIRROS ====================
+        async function carregarCidadesDoServidor() {
+            try {
+                const response = await fetch(`${API_URL}/cidades`);
+                if (!response.ok) throw new Error('Erro ao carregar cidades');
+
+                const cidades = await response.json();
+                const cidadeSelect = document.getElementById('cidade');
+                cidadeSelect.innerHTML = '<option value="">-- Seleccione --</option>';
+
+                cidades.forEach(cidade => {
+                    const option = document.createElement('option');
+                    option.value = cidade;
+                    option.textContent = cidade;
+                    cidadeSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar cidades:', error);
+                mostrarNotificacao('Erro ao carregar cidades', 'error');
+            }
+        }
+
+        async function carregarBairros() {
+            const cidade = document.getElementById('cidade').value;
+            if (!cidade) return;
+
+            try {
+                const response = await fetch(`${API_URL}/bairros/${cidade}`);
+                if (!response.ok) throw new Error('Erro ao carregar bairros');
+
+                const bairros = await response.json();
+                const bairroSelect = document.getElementById('bairro');
+                bairroSelect.innerHTML = '<option value="">-- Seleccione --</option>';
+
+                bairros.forEach(bairro => {
+                    const option = document.createElement('option');
+                    option.value = bairro;
+                    option.textContent = bairro;
+                    bairroSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar bairros:', error);
+                mostrarNotificacao('Erro ao carregar bairros', 'error');
+            }
+        }
+
+        // ==================== GEOLOCALIZAÇÃO ====================
+        function obterCoordenadas() {
+            if (!navigator.geolocation) {
+                mostrarNotificacao('⚠️ Geolocalização não suportada neste dispositivo', 'error');
+                return;
+            }
+
+            if (localizacaoEmProgresso) {
+                mostrarNotificacao('⏳ Já está a obter localização... Por favor aguarde', 'info');
+                return;
+            }
+
+            const btnGPSLng = document.getElementById('btnGPSLng');
+            btnGPSLng.disabled = true;
+            btnGPSLng.classList.add('loading');
+            localizacaoEmProgresso = true;
+
+            mostrarNotificacao('📍 Obtendo localização com alta precisão. Aguarde...', 'info');
+
+            let posicoes = [];
+            const MAX_ACCURACY_METERS = 30;
+            const MIN_POSICOES = 2;
+            const TEMPO_MAXIMO_ESPERA = 15000;
+
+            // Busca de alta precisão com watchPosition
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const coordsAtuais = position.coords;
+                    const accuracy = coordsAtuais.accuracy || Infinity;
+
+                    // Aceita primeira leitura se tiver accuracy razoável
+                    posicoes.push(position);
+                    const posicaoMedia = calcularMediaPosicoes(posicoes);
+                    exibirCoordenadas(posicaoMedia, posicoes.length);
+
+                    // Finalizar se temos precisão satisfatória ou 2 leituras
+                    if ((accuracy <= MAX_ACCURACY_METERS && posicoes.length >= MIN_POSICOES) || posicoes.length >= 3) {
+                        finalizarLocalizacao(true, posicaoMedia);
+                    }
+                },
+                (error) => {
+                    if (posicoes.length > 0) {
+                        const posicaoMedia = calcularMediaPosicoes(posicoes);
+                        exibirCoordenadas(posicaoMedia, posicoes.length);
+                        finalizarLocalizacao(true, posicaoMedia);
+                    } else {
+                        tratarErroGeo(error);
+                        finalizarLocalizacao(false);
+                    }
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+
+            // Timeout para finalizar após tempo máximo
+            setTimeout(() => {
+                if (localizacaoEmProgresso) {
+                    if (posicoes.length > 0) {
+                        const posicaoMedia = calcularMediaPosicoes(posicoes);
+                        exibirCoordenadas(posicaoMedia, posicoes.length);
+                        finalizarLocalizacao(true, posicaoMedia);
+                    } else {
+                        finalizarLocalizacao(false);
+                    }
+                }
+            }, TEMPO_MAXIMO_ESPERA);
+
+            function calcularMediaPosicoes(posicoes) {
+                if (posicoes.length === 0) return null;
+
+                let sumLat = 0, sumLng = 0, sumAcc = 0;
+
+                posicoes.forEach(p => {
+                    sumLat += p.coords.latitude;
+                    sumLng += p.coords.longitude;
+                    sumAcc += p.coords.accuracy || 0;
+                });
+
+                return {
+                    latitude: sumLat / posicoes.length,
+                    longitude: sumLng / posicoes.length,
+                    accuracy: sumAcc / posicoes.length
+                };
+            }
+
+            function exibirCoordenadas(posicaoMedia, numPosicoes = 1) {
+                const lat = posicaoMedia.latitude.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 6,
+                    maximumFractionDigits: 6
+                });
+                const lng = posicaoMedia.longitude.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 6,
+                    maximumFractionDigits: 6
+                });
+                const accuracy = posicaoMedia.accuracy || 0;
+
+                document.getElementById('latitude').value = lat;
+                document.getElementById('longitude').value = lng;
+                document.getElementById('latPrecision').textContent = `Precisão: ±${accuracy.toFixed(1)}m (${numPosicoes} leituras)`;
+                document.getElementById('lngPrecision').textContent = `Precisão: ±${accuracy.toFixed(1)}m (${numPosicoes} leituras)`;
+            }
+
+            function finalizarLocalizacao(sucesso, posicaoMedia = null) {
+                if (watchId !== null) {
+                    navigator.geolocation.clearWatch(watchId);
+                }
+
+                localizacaoEmProgresso = false;
+                btnGPSLng.disabled = false;
+                btnGPSLng.classList.remove('loading');
+
+                if (sucesso && posicaoMedia) {
+                    const accuracy = posicaoMedia.accuracy || 0;
+                    const numLeituras = posicoes.length;
+                    mostrarNotificacao(`✅ Localização obtida! Precisão ±${accuracy.toFixed(1)}m`, 'success');
+                } else {
+                    mostrarNotificacao('❌ Não foi possível obter a localização. Verifique as permissões de localização.', 'error');
+                }
+            }
+
+            function tratarErroGeo(error) {
+                let mensagem = '❌ Erro ao obter localização';
+
+                if (error.code === error.PERMISSION_DENIED) {
+                    mensagem = '❌ Permissão negada. Verifique as permissões de localização do navegador/app';
+                } else if (error.code === error.POSITION_UNAVAILABLE) {
+                    mensagem = '❌ Localização não disponível (ative GPS/localização do dispositivo)';
+                } else if (error.code === error.TIMEOUT) {
+                    mensagem = '⚠️ Tempo excedido. Tente novamente em local com melhor sinal';
+                }
+
+                mostrarNotificacao(mensagem, 'error');
+            }
+        }
+
+        // ==================== MAPEADOR DE CÓDIGO ====================
+        function mapeadorCodigo() {
+            const codigo = document.getElementById('codigoAtivo').value;
+            if (MAPEADOR_CODIGOS[codigo]) {
+                document.getElementById('tipoAtivo').value = MAPEADOR_CODIGOS[codigo];
+                atualizarComponentes();
+            } else {
+                document.getElementById('tipoAtivo').value = '';
+                document.getElementById('componentes').value = '';
+            }
+        }
+
+        // ==================== COMPONENTES ====================
+        function atualizarComponentes() {
+            const tipoAtivo = document.getElementById('tipoAtivo').value;
+            const componentes = COMPONENTES_TIPOS[tipoAtivo] || [];
+            document.getElementById('componentes').value = componentes.join(', ');
+        }
+
+        // ==================== CÂMERA ====================
+        function abrirCamera() {
+            document.getElementById('cameraModal').classList.add('active');
+
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(s => {
+                    stream = s;
+                    document.getElementById('video').srcObject = stream;
+                })
+                .catch(err => {
+                    mostrarNotificacao('Erro ao acessar câmera: ' + err.message, 'error');
+                });
+        }
+
+        function fecharCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            document.getElementById('cameraModal').classList.remove('active');
+        }
+
+        function capturarFoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+
+            canvas.toBlob(blob => {
+                imagemSelecionada = blob;
+                document.getElementById('previewCamera').src = canvas.toDataURL();
+                document.getElementById('previewCamera').style.display = 'block';
+                document.getElementById('cameraPlaceholder').style.display = 'none';
+                mostrarNotificacao('Foto capturada com sucesso!', 'success');
+                fecharCamera();
+            });
+        }
+
+        // ==================== VALIDAÇÃO E FORMATAÇÃO ====================
+        function validarCoordenada(event) {
+            if (!event.key.match(/[\d.,\-]/)) {
+                event.preventDefault();
+            }
+        }
+
+        function formatarCoordenada(inputId) {
+            const input = document.getElementById(inputId);
+            let valor = input.value.trim();
+
+            if (!valor) return;
+
+            let numero = parseFloat(valor.replace(',', '.'));
+
+            if (isNaN(numero)) {
+                mostrarNotificacao('Coordenada inválida', 'error');
+                input.value = '';
+                return;
+            }
+
+            if (inputId === 'latitude') {
+                if (numero < -90 || numero > 90) {
+                    mostrarNotificacao('Latitude deve estar entre -90 e 90', 'error');
+                    input.value = '';
+                    return;
+                }
+                input.value = numero.toLocaleString('pt-BR', {
+                    minimumIntegerDigits: 2,
+                    minimumFractionDigits: 6,
+                    maximumFractionDigits: 6
+                });
+            } else if (inputId === 'longitude') {
+                if (numero < -180 || numero > 180) {
+                    mostrarNotificacao('Longitude deve estar entre -180 e 180', 'error');
+                    input.value = '';
+                    return;
+                }
+                numero = Math.abs(numero);
+                input.value = numero.toLocaleString('pt-BR', {
+                    minimumIntegerDigits: 2,
+                    minimumFractionDigits: 6,
+                    maximumFractionDigits: 6
+                });
+            }
+        }
+
+        function validarFormulario() {
+            const codigo = document.getElementById('codigoAtivo').value.trim();
+            const tipo = document.getElementById('tipoAtivo').value.trim();
+            const cidade = document.getElementById('cidade').value.trim();
+            const bairro = document.getElementById('bairro').value.trim();
+            const latitude = document.getElementById('latitude').value.trim();
+            const longitude = document.getElementById('longitude').value.trim();
+
+            if (!codigo || !tipo || !cidade || !bairro || !latitude || !longitude) {
+                mostrarNotificacao('Preencha todos os campos obrigatórios', 'error');
+                return false;
+            }
+
+            if (isNaN(parseFloat(latitude.replace(',', '.'))) || isNaN(parseFloat(longitude.replace(',', '.')))) {
+                mostrarNotificacao('Latitude e Longitude devem ser números válidos', 'error');
+                return false;
+            }
+
+            return true;
+        }
+
+        // ==================== SALVAR ====================
+        async function salvarCadastro() {
+            if (!validarFormulario()) return;
+
+            const btnSalvar = event.target;
+            btnSalvar.disabled = true;
+            btnSalvar.classList.add('loading');
+
+            try {
+                const tipoAtivo = document.getElementById('tipoAtivo').value;
+                const componentes = COMPONENTES_TIPOS[tipoAtivo] || [];
+                const latitude = document.getElementById('latitude').value.replace(',', '.');
+                const longitude = document.getElementById('longitude').value.replace(',', '.');
+                const codigoAtivo = document.getElementById('codigoAtivo').value;
+                const bairro = document.getElementById('bairro').value;
+
+                const formData = new FormData();
+                formData.append('codigo', codigoAtivo);
+                formData.append('tipo', tipoAtivo);
+                formData.append('cidade', document.getElementById('cidade').value);
+                formData.append('bairro', bairro);
+                formData.append('latitude', latitude);
+                formData.append('longitude', longitude);
+
+                if (imagemSelecionada) {
+                    formData.append('imagem', imagemSelecionada, 'captura.jpg');
+                }
+
+                const resAtivo = await fetch(`${API_URL}/cadastro-activos`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!resAtivo.ok) {
+                    const erro = await resAtivo.json();
+                    throw new Error(erro.details || erro.error || 'Erro ao salvar ativo');
+                }
+
+                const ativoData = await resAtivo.json();
+                const ativoId = ativoData.id;
+
+                for (const componente of componentes) {
+                    try {
+                        await fetch(`${API_URL}/componentes`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                ativoId: ativoId,
+                                nome: componente,
+                                estado: 'Inf. Indisponível',
+                                latitude: latitude,
+                                longitude: longitude
+                            })
+                        });
+                    } catch (err) {
+                        console.warn(`Aviso ao salvar componente ${componente}:`, err);
+                    }
+                }
+
+                mostrarNotificacao('Cadastro salvo com sucesso!', 'success');
+                setTimeout(() => limparFormulario(), 1000);
+
+            } catch (error) {
+                console.error('Erro:', error);
+                mostrarNotificacao('Erro ao salvar cadastro: ' + error.message, 'error');
+            } finally {
+                btnSalvar.disabled = false;
+                btnSalvar.classList.remove('loading');
+            }
+        }
+
+        // ==================== NOVA ÁREA ====================
+        function novaArea() {
+            document.getElementById('cidade').value = '';
+            document.getElementById('bairro').innerHTML = '<option value="">-- Seleccione --</option>';
+            limparFormulario();
+            mostrarNotificacao('Pronto para nova área', 'info');
+        }
+
+        // ==================== LIMPAR ====================
+        function limparFormulario() {
+            document.getElementById('codigoAtivo').value = '';
+            document.getElementById('tipoAtivo').value = '';
+            document.getElementById('latitude').value = '';
+            document.getElementById('longitude').value = '';
+            document.getElementById('componentes').value = '';
+            document.getElementById('cidade').value = '';
+            document.getElementById('bairro').value = '';
+            document.getElementById('latPrecision').textContent = '';
+            document.getElementById('lngPrecision').textContent = '';
+
+            document.getElementById('previewCamera').style.display = 'none';
+            document.getElementById('cameraPlaceholder').style.display = 'block';
+
+            imagemSelecionada = null;
+        }
+
+        // ==================== NOTIFICAÇÕES ====================
+        function mostrarNotificacao(mensagem, tipo = 'info') {
+            const notif = document.getElementById('notificacao');
+            notif.textContent = mensagem;
+            notif.className = `notificacao ${tipo}`;
+            notif.classList.add('active');
+
+            setTimeout(() => {
+                notif.classList.remove('active');
+            }, 3000);
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Start Server (open browser)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}\\server.js",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}\\.env",
+      "serverReadyAction": {
+        "pattern": "Servidor rodando em http://localhost:(\\d+)",
+        "uriFormat": "http://localhost:%s",
+        "action": "openExternally"
+      }
+    },
+    {
+      "name": "Open Edge (manual)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "\"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe\" http://localhost:3000/"
+    }
+  ]
+}

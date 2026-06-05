@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão e Localização - Extensa</title>
+    <link rel="stylesheet" href="responsive.css">
+    <link rel="icon" type="image/x-icon" href="Imag/logo.ico">
+    <script src="config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #202135;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .container {
+            width: 100%;
+            min-height: 100vh;
+            height: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        img,
+        video,
+        canvas,
+        iframe {
+            max-width: 100%;
+        }
+
+        /* ==================== MAIN CONTENT ==================== */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        /* ==================== DATA SECTION ==================== */
+        .data-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            background-color: white;
+            border: 1px solid #bbb;
+            border-radius: 8px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .data-table thead {
+            position: sticky;
+            top: 0;
+            background-color: #ff8c00;
+            color: white;
+            font-weight: bold;
+            z-index: 10;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .data-table th {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ff6600;
+            white-space: nowrap;
+            font-size: 11px;
+        }
+
+        .data-table td {
+            padding: 6px;
+            border-bottom: 1px solid #e8e8e8;
+            color: #203135;
+            border-right: 1px solid #f0f0f0;
+            height: 28px;
+        }
+
+        .data-table tbody tr {
+            background-color: white;
+            transition: background-color 0.2s;
+        }
+
+        .data-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #fff3cd;
+            cursor: pointer;
+        }
+
+        .data-table tbody tr.selected {
+            background-color: #ff8c00;
+            color: white;
+        }
+
+        .data-table tbody tr.selected td {
+            color: white;
+        }
+
+        .data-table tbody tr.filtrado {
+            background-color: #fff3cd;
+            font-weight: 600;
+        }
+
+        /* Scrollbar Styling */
+        .table-container::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 6px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* ==================== FILTER SECTION ==================== */
+        .filter-section {
+            width: 280px;
+            background-color: #e6e6fa;
+            border-radius: 4px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+        }
+
+        .preview-box {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            height: auto;
+            background-color: #f0f0f0;
+            border: 3px solid #ff8c00;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center center;
+        }
+
+        .filter-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px;
+            background-color: white;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            flex-shrink: 0;
+        }
+
+        .filter-box label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #ff8c00;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-box select {
+            padding: 6px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            font-size: 11px;
+            background-color: white;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .filter-box select:focus {
+            outline: none;
+            border-color: #ff8c00;
+            box-shadow: 0 0 4px rgba(255, 140, 0, 0.5);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        .button-group .btn {
+            flex: 1;
+        }
+
+        /* ==================== BUTTONS ==================== */
+        .btn {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            white-space: nowrap;
+            user-select: none;
+            height: 32px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-filter {
+            background-color: #27ae60;
+            color: #f5f5f5;
+        }
+
+        .btn-filter:hover {
+            background-color: #229954;
+        }
+
+        .btn-cancel {
+            background-color: #95a5a6;
+            color: #f5f5f5;
+        }
+
+        .btn-cancel:hover {
+            background-color: #7f8c8d;
+        }
+
+        .btn-group {
+            background-color: #3498db;
+            color: #f5f5f5;
+        }
+
+        .btn-group:hover {
+            background-color: #2980b9;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* ==================== MESSAGES ==================== */
+        .info-panel {
+            background-color: white;
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 10px;
+            border-left: 4px solid #ff8c00;
+            color: #333;
+            flex-shrink: 0;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #ff8c00;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 6px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* ==================== MODAL STYLES ==================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 10px;
+        }
+
+        .modal-overlay.show {
+            display: flex !important;
+        }
+
+        .modal-content {
+            width: 95%;
+            height: 90%;
+            background-color: white;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        /* ==================== MODAL HEADER ==================== */
+        .modal-header {
+            background-color: #ff8c00;
+            color: white;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            min-height: 45px;
+            flex-shrink: 0;
+        }
+
+        .modal-header h2 {
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: #ffff00;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            transform: scale(1.1);
+        }
+
+        /* ==================== MODAL MAIN ==================== */
+        .modal-main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        /* ==================== MODAL DATA SECTION ==================== */
+        .modal-data-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-controls-bar {
+            padding: 8px;
+            background-color: #ff8c00;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            min-height: auto;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .modal-controls-bar label {
+            font-weight: bold;
+            color: white;
+            white-space: nowrap;
+            font-size: 11px;
+        }
+
+        .modal-controls-bar input {
+            padding: 6px 8px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            font-size: 11px;
+            background-color: white;
+            color: #333;
+            min-width: 120px;
+            flex: 1;
+            height: 30px;
+        }
+
+        .modal-controls-bar input:focus {
+            outline: none;
+            border-color: #ff8c00;
+            box-shadow: 0 0 4px rgba(255, 140, 0, 0.5);
+        }
+
+        .modal-table-container {
+            flex: 1;
+            overflow: auto;
+            background-color: white;
+            border: 1px solid #bbb;
+        }
+
+        .modal-data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .modal-data-table thead {
+            position: sticky;
+            top: 0;
+            background-color: #ff8c00;
+            color: white;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .modal-data-table th {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ff6600;
+            white-space: nowrap;
+            font-size: 10px;
+        }
+
+        .modal-data-table td {
+            padding: 6px;
+            border-bottom: 1px solid #e8e8e8;
+            color: #203135;
+            border-right: 1px solid #f0f0f0;
+            height: 28px;
+        }
+
+        .modal-data-table tbody tr {
+            background-color: white;
+            transition: background-color 0.2s;
+        }
+
+        .modal-data-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .modal-data-table tbody tr:hover {
+            background-color: #fff3cd;
+            cursor: pointer;
+        }
+
+        /* ==================== MODAL FILTER SECTION ==================== */
+        .modal-filter-section {
+            width: 280px;
+            background-color: #e6e6fa;
+            border-radius: 4px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+        }
+
+        .modal-filter-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px;
+            background-color: white;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            flex-shrink: 0;
+        }
+
+        .modal-filter-box label {
+            font-size: 10px;
+            font-weight: bold;
+            color: #ff8c00;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-filter-box input {
+            padding: 6px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            font-size: 11px;
+            background-color: #f0f0f0;
+            color: #333;
+            font-weight: bold;
+            text-align: center;
+            height: 28px;
+        }
+
+        /* ==================== MODAL BUTTONS ==================== */
+        .modal-btn {
+            padding: 6px 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            white-space: nowrap;
+            user-select: none;
+            min-width: 60px;
+            height: 30px;
+        }
+
+        .modal-btn:active {
+            transform: scale(0.98);
+        }
+
+        .modal-btn-filter {
+            background-color: #27ae60;
+            color: #f5f5f5;
+        }
+
+        .modal-btn-filter:hover {
+            background-color: #229954;
+        }
+
+        .modal-btn-cancel {
+            background-color: #95a5a6;
+            color: #f5f5f5;
+        }
+
+        .modal-btn-cancel:hover {
+            background-color: #7f8c8d;
+        }
+
+        /* ==================== MODAL INFO PANEL ==================== */
+        .modal-info-panel {
+            background-color: white;
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 10px;
+            border-left: 4px solid #ff8c00;
+            color: #333;
+            overflow: auto;
+            flex: 1;
+            flex-shrink: 0;
+        }
+
+        .modal-info-panel strong {
+            color: #ff8c00;
+        }
+
+        .modal-info-panel div {
+            margin: 3px 0;
+        }
+
+        .modal-empty-message {
+            text-align: center;
+            padding: 30px 15px;
+            color: #666;
+            font-size: 11px;
+        }
+
+        /* ==================== MODAL SCROLLBAR ==================== */
+        .modal-table-container::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .modal-table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .modal-table-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 6px;
+        }
+
+        .modal-table-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .modal-filter-section::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-filter-section::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .modal-filter-section::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .filter-section::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .filter-section::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .filter-section::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        /* ==================== STATUS BADGES ==================== */
+        .status-badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: white;
+            font-size: 9px;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .status-bom {
+            background: #27ae60;
+        }
+
+        .status-danificado {
+            background: #e74c3c;
+        }
+
+        .status-pendente {
+            background: #f39c12;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 1024px) {
+            .modal-main {
+                flex-direction: column;
+            }
+
+            .modal-filter-section {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+            }
+
+            .modal-data-section {
+                flex: 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .data-table {
+                font-size: 10px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 4px;
+            }
+
+            .modal-header h2 {
+                font-size: 13px;
+            }
+
+            .modal-data-table {
+                font-size: 10px;
+            }
+
+            .modal-data-table th,
+            .modal-data-table td {
+                padding: 4px;
+            }
+
+            .modal-content {
+                width: 98%;
+                height: 95%;
+            }
+
+            .modal-controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .modal-controls-bar input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- LEFT: DATA GRID SECTION -->
+            <div class="data-section">
+                <div class="table-container">
+                    <table id="dataTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 25px;">Sel</th>
+                                <th>Activo</th>
+                                <th>Latitude</th>
+                                <th>Longitude</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr>
+                                <td colspan="4" class="empty-message">
+                                    <span class="loading-spinner"></span>
+                                    Carregando ativos...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- RIGHT: FILTER SECTION -->
+            <div class="filter-section">
+                <!-- PREVIEW IMAGE -->
+                <div class="preview-box">
+                    <img id="previewImage"
+                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='272' height='270'%3E%3Crect fill='%23e6e6fa' width='272' height='270'/%3E%3Ctext x='50' y='135' fill='%23999' font-size='14' text-anchor='start'%3ESem imagem%3C/text%3E%3C/svg%3E"
+                        alt="Pré-visualização">
+                </div>
+
+                <!-- FILTER CONTROLS -->
+                <div class="filter-box">
+                    <label for="bairroFilter">Filtro por Bairro:</label>
+                    <select id="bairroFilter">
+                        <option value="">-- Selecione um Bairro --</option>
+                    </select>
+
+                    <div class="button-group">
+                        <button class="btn btn-filter" onclick="filtrarPorBairro()" title="Filtrar ativos por bairro">
+                            🔍 Filtrar
+                        </button>
+                        <button class="btn btn-cancel" onclick="limparFiltros()" title="Limpar filtros">
+                            ✕ Canc.
+                        </button>
+                    </div>
+
+                    <button class="btn btn-group" onclick="abrirModalAgrupamento()" title="Agrupar ativos por cidade">
+                        📊 Agrupar
+                    </button>
+                </div>
+
+                <!-- INFO PANEL -->
+                <div id="infoPanel" class="info-panel">
+                    <strong>Total:</strong> <span id="totalAtivos">0</span><br>
+                    <strong>Sel.:</strong> <span id="selecionado">Nenhum</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AGRUPAMENTO -->
+    <div id="modalAgrupamento" class="modal-overlay">
+        <div class="modal-content">
+            <!-- HEADER -->
+            <div class="modal-header">
+                <h2>📊 Agrupamento de Postes</h2>
+                <button class="modal-close-btn" onclick="fecharModalAgrupamento()" title="Fechar">×</button>
+            </div>
+
+            <!-- MAIN CONTENT -->
+            <div class="modal-main">
+                <!-- LEFT: DATA GRID SECTION -->
+                <div class="modal-data-section">
+                    <div class="modal-controls-bar">
+                        <label>Bairro:</label>
+                        <input type="text" id="modalBairroFilter" placeholder="Digite...">
+                        <button class="modal-btn modal-btn-filter" onclick="filtrarAgrupamentoPorBairro()"
+                            title="Filtrar">🔍</button>
+                        <button class="modal-btn modal-btn-cancel" onclick="limparFiltrosAgrupamento()"
+                            title="Limpar">✕</button>
+                        <button class="modal-btn modal-btn-filter" onclick="imprimirAgrupamento()"
+                            title="Imprimir lista de ativos agrupados">🖨️</button>
+                    </div>
+
+                    <div class="modal-table-container">
+                        <table id="modalDataTable" class="modal-data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">ID</th>
+                                    <th>Bairro</th>
+                                    <th style="width: 80px;">Qtd.</th>
+                                    <th>Cidade</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modalTableBody">
+                                <tr>
+                                    <td colspan="4" class="modal-empty-message">
+                                        <span class="loading-spinner"></span>
+                                        Carregando dados...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- RIGHT: INFO SECTION -->
+                <div class="modal-filter-section">
+                    <div class="modal-filter-box">
+                        <label for="modalTotalPostes">Total Postes:</label>
+                        <input type="text" id="modalTotalPostes" readonly>
+                    </div>
+
+                    <!-- INFO PANEL -->
+                    <div id="modalInfoPanel" class="modal-info-panel">
+                        <strong>Resumo:</strong>
+                        <div id="modalResumo">
+                            Carregando...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE COMPONENTES (Tabela) -->
+    <div id="modalComponentesLista" class="modal-overlay">
+        <div class="modal-content" style="width: 60%; height: 75%; max-width: 500px;">
+            <div class="modal-header">
+                <h2>📋 Componentes: <span id="labelAtivoNomeLista" style="color: #ffff00; font-size: 12px;"></span></h2>
+                <button class="modal-close-btn" onclick="fecharModalComponentes()" title="Fechar">×</button>
+            </div>
+            <div class="modal-main" style="padding: 0;">
+                <div class="modal-data-section" style="margin: 8px;">
+                    <div class="modal-table-container">
+                        <table id="tableComponentesModal" class="modal-data-table">
+                            <thead>
+                                <tr>
+                                    <th>Componente</th>
+                                    <th style="width: 80px;">Estado</th>
+                                    <th style="width: 50px;">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyComponentesModal">
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: #999;">Carregando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div style="padding: 8px; display: flex; gap: 6px; justify-content: flex-end;">
+                <button class="btn btn-cancel" onclick="fecharModalComponentes()">✕ Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE ACTUALIZAÇÃO -->
+    <div id="modalActualizar" class="modal-overlay">
+        <div class="modal-content" style="width: 350px; height: auto;">
+            <div class="modal-header">
+                <h2>✏️ Actualizar Estado</h2>
+                <button class="modal-close-btn" onclick="fecharModalActualizar()" title="Fechar">×</button>
+            </div>
+            <div class="modal-main" style="flex-direction: column; padding: 12px;">
+                <div style="margin-bottom: 12px;">
+                    <label
+                        style="font-weight: 600; color: #333; margin-bottom: 3px; display: block; font-size: 11px;">Componente:</label>
+                    <input type="text" id="componenteNome" readonly
+                        style="background: #f5f5f5; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px;">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label
+                        style="font-weight: 600; color: #333; margin-bottom: 3px; display: block; font-size: 11px;">Estado
+                        Actual:</label>
+                    <input type="text" id="estadoAtual" readonly
+                        style="background: #f5f5f5; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px;">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label
+                        style="font-weight: 600; color: #333; margin-bottom: 3px; display: block; font-size: 11px;">Novo
+                        Estado:</label>
+                    <select id="novoEstado"
+                        style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px;">
+                        <option value="">Seleccione um estado</option>
+                        <option value="Bom">✓ Bom</option>
+                        <option value="Danificado">✗ Danificado</option>
+                        <option value="Pendente">⏳ Pendente</option>
+                    </select>
+                </div>
+            </div>
+            <div style="padding: 8px; display: flex; gap: 6px; justify-content: flex-end;">
+                <button class="btn btn-cancel" onclick="fecharModalActualizar()">✕ Cancelar</button>
+                <button class="btn btn-filter" onclick="salvarEstado()">✓ Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const body = document.body;
+            body.style.opacity = '0';
+            body.style.transition = 'opacity 0.45s ease';
+
+            window.addEventListener('load', () => {
+                requestAnimationFrame(() => {
+                    body.style.opacity = '1';
+                });
+            });
+        })();
+
+        // ==================== CONFIGURATION ====================
+        const API_URL = `${API_BASE_URL}/api`;
+        let allAtivos = [];
+        let ativoSelecionado = null;
+        let ativoSelecionadoNome = null;
+        let componenteSelecionado = null;
+        let allAgrupamentos = [];
+        let selectedAtivo = null;
+        let selectedRow = null;
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Aplicação iniciada');
+            carregarAtivos();
+            carregarBairros();
+        });
+
+        // ==================== LOAD ASSETS ====================
+        async function carregarAtivos() {
+            try {
+                console.log('Carregando ativos cadastro...');
+                const response = await fetch(`${API_URL}/activos-cadastro-web`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                allAtivos = await response.json();
+                console.log(`✅ ${allAtivos.length} ativos carregados`);
+                renderizarTabela(allAtivos);
+                atualizarPainel();
+            } catch (error) {
+                console.error('Erro ao carregar ativos:', error);
+                mostrarErro('Erro ao carregar ativos do servidor: ' + error.message);
+            }
+        }
+
+        // ==================== LOAD NEIGHBORHOODS ====================
+        async function carregarBairros() {
+            try {
+                console.log('Carregando bairros...');
+                const response = await fetch(`${API_URL}/bairros`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const bairros = await response.json();
+                const select = document.getElementById('bairroFilter');
+
+                bairros.forEach(bairro => {
+                    const option = document.createElement('option');
+                    option.value = bairro;
+                    option.textContent = bairro;
+                    select.appendChild(option);
+                });
+
+                console.log(`✅ ${bairros.length} bairros carregados`);
+            } catch (error) {
+                console.error('Erro ao carregar bairros:', error);
+            }
+        }
+
+        // ==================== RENDER TABLE ====================
+        function renderizarTabela(ativos) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            if (ativos.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty-message">
+                            Nenhum ativo encontrado
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            ativos.forEach((ativo, index) => {
+                const tr = document.createElement('tr');
+                tr.dataset.id = ativo.id;
+                tr.dataset.index = index;
+
+                tr.innerHTML = `
+                    <td><input type="radio" name="ativo" value="${ativo.id}" onchange="selecionarAtivoRadio(${ativo.id}, '${ativo.tipo.replace(/'/g, "\\'")}')"></td>
+                    <td>${ativo.tipo || 'N/A'}</td>
+                    <td>${ativo.latitude ? ativo.latitude.toFixed(6) : 'N/A'}</td>
+                    <td>${ativo.longitude ? ativo.longitude.toFixed(6) : 'N/A'}</td>
+                `;
+
+                tr.addEventListener('click', (e) => {
+                    if (e.target.tagName !== 'INPUT') {
+                        tr.querySelector('input[type="radio"]').checked = true;
+                        selecionarAtivoRadio(ativo.id, ativo.tipo);
+                    }
+                });
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ==================== SELECT ASSET ====================
+        function selecionarAtivoRadio(ativoId, ativoNome) {
+            ativoSelecionado = ativoId;
+            ativoSelecionadoNome = ativoNome;
+
+            const ativo = allAtivos.find(a => a.id === ativoId);
+            if (ativo && ativo.imagem) {
+                document.getElementById('previewImage').src = ativo.imagem;
+            } else {
+                document.getElementById('previewImage').src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="272" height="270"%3E%3Crect fill="%23e6e6fa" width="272" height="270"/%3E%3Ctext x="50" y="135" fill="%23999" font-size="14"%3ESem imagem%3C/text%3E%3C/svg%3E';
+            }
+
+            carregarComponentes(ativoId, ativoNome);
+            atualizarPainel();
+            console.log('Ativo selecionado:', ativoId);
+        }
+
+        // ==================== LOAD COMPONENTS ====================
+        async function carregarComponentes(ativoId, ativoNome) {
+            try {
+                const response = await fetch(`${API_URL}/componentes/${ativoId}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const componentes = await response.json();
+                const tbody = document.getElementById('tbodyComponentesModal') || document.createElement('tbody');
+
+                if (document.getElementById('tbodyComponentesModal')) {
+                    tbody = document.getElementById('tbodyComponentesModal');
+                    tbody.innerHTML = '';
+
+                    if (componentes.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #999;">Nenhum componente</td></tr>';
+                        return;
+                    }
+
+                    componentes.forEach(comp => {
+                        const statusClass = `status-${comp.estado.toLowerCase()}`;
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${comp.nome}</td>
+                            <td><span class="status-badge ${statusClass}">${comp.estado}</span></td>
+                            <td><button class="btn btn-filter" onclick="abrirEditarComponente(${comp.id}, '${comp.nome.replace(/'/g, "\\'")}', '${comp.estado}')" style="margin: 0; padding: 4px 6px; font-size: 10px;">✏️</button></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao carregar componentes:', error);
+            }
+        }
+
+        // ==================== FILTER BY NEIGHBORHOOD ====================
+        function filtrarPorBairro() {
+            const bairroSelecionado = document.getElementById('bairroFilter').value;
+
+            if (!bairroSelecionado) {
+                mostrarErro('Selecione um bairro para filtrar');
+                return;
+            }
+
+            const filtrados = allAtivos.filter(a => a.bairro === bairroSelecionado);
+
+            if (filtrados.length === 0) {
+                mostrarErro(`Nenhum ativo encontrado no bairro: ${bairroSelecionado}`);
+                renderizarTabela([]);
+            } else {
+                renderizarTabela(filtrados);
+                console.log(`✅ ${filtrados.length} ativos filtrados por bairro: ${bairroSelecionado}`);
+            }
+        }
+
+        // ==================== CLEAR FILTERS ====================
+        function limparFiltros() {
+            document.getElementById('bairroFilter').value = '';
+            ativoSelecionado = null;
+            ativoSelecionadoNome = null;
+            selectedRow = null;
+            document.getElementById('previewImage').src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="272" height="270"%3E%3Crect fill="%23e6e6fa" width="272" height="270"/%3E%3Ctext x="50" y="135" fill="%23999" font-size="14"%3ESem imagem%3C/text%3E%3C/svg%3E';
+            renderizarTabela(allAtivos);
+            document.querySelectorAll('input[name="ativo"]').forEach(r => r.checked = false);
+            atualizarPainel();
+            console.log('Filtros limpos');
+        }
+
+        // ==================== OPEN COMPONENTS LIST ====================
+        async function abrirListaComponentes() {
+            if (!ativoSelecionado) {
+                mostrarErro('Seleccione um ativo primeiro');
+                return;
+            }
+
+            try {
+                document.getElementById("labelAtivoNomeLista").textContent = ativoSelecionadoNome;
+
+                const response = await fetch(`${API_URL}/componentes/${ativoSelecionado}`);
+
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+
+                const componentes = await response.json();
+                const tbody = document.getElementById("tbodyComponentesModal");
+                tbody.innerHTML = '';
+
+                if (componentes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #999;">Nenhum componente</td></tr>';
+                    document.getElementById("modalComponentesLista").classList.add("show");
+                    return;
+                }
+
+                componentes.forEach(comp => {
+                    const statusClass = `status-${comp.estado.toLowerCase()}`;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${comp.nome}</td>
+                        <td>
+                            <span class="status-badge ${statusClass}">${comp.estado}</span>
+                        </td>
+                        <td>
+                            <button class="btn btn-filter" onclick="abrirEditarComponente(${comp.id}, '${comp.nome.replace(/'/g, "\\'")}', '${comp.estado}')" style="margin: 0; padding: 4px 4px; font-size: 10px;">✏️</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                document.getElementById("modalComponentesLista").classList.add("show");
+            } catch (error) {
+                console.error('Erro:', error);
+                mostrarErro(`Erro ao carregar componentes: ${error.message}`);
+            }
+        }
+
+        // ==================== CLOSE COMPONENTS MODAL ====================
+        function fecharModalComponentes() {
+            document.getElementById("modalComponentesLista").classList.remove("show");
+        }
+
+        // ==================== EDIT COMPONENT ====================
+        function abrirEditarComponente(id, nome, estado) {
+            componenteSelecionado = { id, nome, estado };
+
+            document.getElementById('componenteNome').value = nome;
+            document.getElementById('estadoAtual').value = estado;
+            document.getElementById('novoEstado').value = '';
+
+            document.getElementById('modalComponentesLista').classList.remove('show');
+            document.getElementById('modalActualizar').classList.add('show');
+        }
+
+        // ==================== CLOSE UPDATE MODAL ====================
+        function fecharModalActualizar() {
+            document.getElementById('modalActualizar').classList.remove('show');
+        }
+
+        // ==================== SAVE STATE ====================
+        async function salvarEstado() {
+            const novoEstado = document.getElementById("novoEstado").value;
+
+            if (!novoEstado) {
+                mostrarErro('Seleccione um novo estado');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/componentes/${componenteSelecionado.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ estado: novoEstado })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+
+                mostrarSucesso('Estado actualizado com sucesso!');
+                fecharModalActualizar();
+                carregarComponentes(ativoSelecionado, ativoSelecionadoNome);
+                abrirListaComponentes();
+            } catch (error) {
+                console.error('Erro:', error);
+                mostrarErro(`Erro ao actualizar: ${error.message}`);
+            }
+        }
+
+        // ==================== GROUPING MODAL FUNCTIONS ====================
+
+        // Open Grouping Modal
+        async function abrirModalAgrupamento() {
+            const modal = document.getElementById('modalAgrupamento');
+            modal.classList.add('show');
+            console.log('Modal de Agrupamento aberto');
+
+            // Carregar dados do agrupamento
+            await carregarAgrupamentos();
+        }
+
+        // Close Grouping Modal
+        function fecharModalAgrupamento() {
+            const modal = document.getElementById('modalAgrupamento');
+            modal.classList.remove('show');
+            console.log('Modal de Agrupamento fechado');
+        }
+
+        // Load Grouping Data
+        async function carregarAgrupamentos() {
+            try {
+                console.log('Carregando agrupamentos cadastro...');
+                const response = await fetch(`${API_URL}/agrupamentos-cadastro`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                allAgrupamentos = await response.json();
+                console.log(`✅ ${allAgrupamentos.length} agrupamentos carregados`);
+                renderizarTabelaAgrupamentos(allAgrupamentos);
+                atualizarResumoAgrupamento();
+            } catch (error) {
+                console.error('Erro ao carregar agrupamentos:', error);
+                mostrarErro('Erro ao carregar agrupamentos: ' + error.message);
+            }
+        }
+
+        // Render Grouping Table
+        function renderizarTabelaAgrupamentos(agrupamentos) {
+            const tbody = document.getElementById('modalTableBody');
+            tbody.innerHTML = '';
+
+            if (agrupamentos.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="modal-empty-message">
+                            Nenhum agrupamento encontrado
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            agrupamentos.forEach((ag, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${ag.id}</td>
+                    <td><strong>${ag.bairro || 'N/A'}</strong></td>
+                    <td style="text-align: center; font-weight: bold; color: #27ae60;">${ag.quantidade}</td>
+                    <td>${ag.cidade || 'N/A'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Filter Grouping by Neighborhood
+        function filtrarAgrupamentoPorBairro() {
+            const bairro = document.getElementById('modalBairroFilter').value.toLowerCase().trim();
+
+            if (!bairro) {
+                renderizarTabelaAgrupamentos(allAgrupamentos);
+                atualizarResumoAgrupamento();
+                return;
+            }
+
+            const filtrados = allAgrupamentos.filter(ag =>
+                ag.bairro.toLowerCase().startsWith(bairro)
+            );
+
+            renderizarTabelaAgrupamentos(filtrados);
+            atualizarResumoAgrupamento(filtrados);
+        }
+
+        // Clear Grouping Filters
+        function limparFiltrosAgrupamento() {
+            document.getElementById('modalBairroFilter').value = '';
+            renderizarTabelaAgrupamentos(allAgrupamentos);
+            atualizarResumoAgrupamento();
+        }
+
+        // Update Grouping Summary
+        function atualizarResumoAgrupamento(agrupamentos = allAgrupamentos) {
+            const totalPostes = agrupamentos.reduce((sum, ag) => sum + ag.quantidade, 0);
+            const totalBairros = agrupamentos.length;
+
+            document.getElementById('modalTotalPostes').value = totalPostes;
+            document.getElementById('modalResumo').innerHTML = `
+                <div><strong>Total Bairros:</strong> ${totalBairros}</div>
+                <div><strong>Total Postes:</strong> ${totalPostes}</div>
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd;">
+                    <strong>Dist. Cidades:</strong>
+                    ${gerarDistribuicaoCidades(agrupamentos)}
+                </div>
+            `;
+        }
+
+        // Generate City Distribution
+        function gerarDistribuicaoCidades(agrupamentos = allAgrupamentos) {
+            const distribuicao = {};
+            agrupamentos.forEach(ag => {
+                const cidade = ag.cidade || 'S/c';
+                if (!distribuicao[cidade]) {
+                    distribuicao[cidade] = 0;
+                }
+                distribuicao[cidade] += ag.quantidade;
+            });
+
+            let html = '<ul style="margin: 3px 0; padding-left: 16px; font-size: 9px;">';
+            Object.keys(distribuicao).sort().forEach(cidade => {
+                html += `<li>${cidade}: <strong style="color: #27ae60;">${distribuicao[cidade]}</strong></li>`;
+            });
+            html += '</ul>';
+
+            return html;
+        }
+
+        function imprimirAgrupamento() {
+            const agrupamentos = allAgrupamentos;
+            
+            if (!agrupamentos || agrupamentos.length === 0) {
+                mostrarErro('Nenhum dado para imprimir. Carregue os dados de agrupamento primeiro.');
+                return;
+            }
+
+            const filtro = document.getElementById('modalBairroFilter').value.trim();
+            const agrupamentosFiltrados = filtro 
+                ? agrupamentos.filter(ag => ag.bairro.toLowerCase().startsWith(filtro.toLowerCase()))
+                : agrupamentos;
+
+            const totalPostes = agrupamentosFiltrados.reduce((sum, ag) => sum + ag.quantidade, 0);
+            
+            let tabelaHTML = '';
+            agrupamentosFiltrados.forEach((ag, index) => {
+                tabelaHTML += `
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${index + 1}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;"><strong>${ag.bairro || 'N/A'}</strong></td>
+                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${ag.quantidade}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${ag.cidade || 'N/A'}</td>
+                    </tr>
+                `;
+            });
+
+            const dataAtual = new Date();
+            const dataFormatada = `${dataAtual.getDate()}/${dataAtual.getMonth() + 1}/${dataAtual.getFullYear()} ${dataAtual.getHours().toString().padStart(2, '0')}:${dataAtual.getMinutes().toString().padStart(2, '0')}`;
+
+            const conteudoImpressao = `
+                <!DOCTYPE html>
+                <html lang="pt-AO">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Lista de Ativos Agrupados por Bairro</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 20px;
+                            background-color: #f5f5f5;
+                        }
+                        .print-container {
+                            background-color: white;
+                            padding: 20px;
+                            border-radius: 5px;
+                            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                            max-width: 900px;
+                            margin: 0 auto;
+                        }
+                        .header {
+                            text-align: center;
+                            margin-bottom: 20px;
+                            border-bottom: 2px solid #2c3e50;
+                            padding-bottom: 15px;
+                        }
+                        .header h1 {
+                            margin: 0;
+                            color: #2c3e50;
+                            font-size: 24px;
+                        }
+                        .header p {
+                            margin: 5px 0;
+                            color: #666;
+                            font-size: 12px;
+                        }
+                        .info-bar {
+                            background-color: #ecf0f1;
+                            padding: 10px;
+                            margin-bottom: 15px;
+                            border-radius: 3px;
+                            display: flex;
+                            justify-content: space-between;
+                            font-size: 14px;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 20px;
+                        }
+                        thead {
+                            background-color: #34495e;
+                            color: white;
+                        }
+                        th {
+                            border: 1px solid #ddd;
+                            padding: 12px;
+                            text-align: left;
+                            font-weight: bold;
+                        }
+                        td {
+                            border: 1px solid #ddd;
+                            padding: 8px;
+                        }
+                        tbody tr:nth-child(even) {
+                            background-color: #f9f9f9;
+                        }
+                        tbody tr:hover {
+                            background-color: #f0f0f0;
+                        }
+                        .footer {
+                            text-align: right;
+                            margin-top: 20px;
+                            padding-top: 10px;
+                            border-top: 1px solid #ddd;
+                            font-size: 11px;
+                            color: #666;
+                        }
+                        .total-row {
+                            background-color: #ecf0f1;
+                            font-weight: bold;
+                        }
+                        @media print {
+                            body {
+                                background-color: white;
+                                margin: 0;
+                            }
+                            .print-container {
+                                box-shadow: none;
+                                max-width: 100%;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-container">
+                        <div class="header">
+                            <h1>📊 Lista de Ativos Agrupados por Bairro</h1>
+                            <p>Relatório gerado em: ${dataFormatada}</p>
+                            ${filtro ? `<p>Filtro aplicado: <strong>${filtro}</strong></p>` : '<p>Mostrando todos os bairros</p>'}
+                        </div>
+
+                        <div class="info-bar">
+                            <div><strong>Total de Bairros:</strong> ${agrupamentosFiltrados.length}</div>
+                            <div><strong>Total de Postes:</strong> ${totalPostes}</div>
+                        </div>
+
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">ID</th>
+                                    <th>Bairro</th>
+                                    <th style="width: 80px; text-align: center;">Quantidade</th>
+                                    <th>Cidade</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tabelaHTML}
+                                <tr class="total-row">
+                                    <td colspan="2" style="text-align: right;"><strong>TOTAL:</strong></td>
+                                    <td style="text-align: center;"><strong>${totalPostes}</strong></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="footer">
+                            <p>Este é um relatório gerado automaticamente do sistema EDM.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const janela = window.open('', '_blank');
+            janela.document.write(conteudoImpressao);
+            janela.document.close();
+            
+            setTimeout(() => {
+                janela.print();
+            }, 250);
+
+            console.log('✅ Relatório de agrupamento preparado para impressão');
+        }
+
+        // ==================== MAPA ====================
+        function abrirMapa() {
+            mostrarErro('Funcionalidade de mapa ainda não implementada');
+        }
+
+        // ==================== UPDATE PANEL ====================
+        function atualizarPainel() {
+            document.getElementById('totalAtivos').textContent = allAtivos.length;
+
+            if (ativoSelecionado) {
+                document.getElementById('selecionado').textContent =
+                    `${ativoSelecionado} - ${ativoSelecionadoNome}`;
+            } else {
+                document.getElementById('selecionado').textContent = 'Nenhum';
+            }
+        }
+
+        // ==================== ERROR HANDLING ====================
+        function mostrarErro(mensagem) {
+            console.error('❌ ' + mensagem);
+            alert('❌ ' + mensagem);
+        }
+
+        function mostrarSucesso(mensagem) {
+            console.log('✅ ' + mensagem);
+            alert('✅ ' + mensagem);
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function (e) {
+            const modals = document.querySelectorAll('.modal-overlay');
+            modals.forEach(modal => {
+                if (e.target === modal) {
+                    modal.classList.remove('show');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
