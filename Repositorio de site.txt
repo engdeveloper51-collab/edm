@@ -1,0 +1,21 @@
+https://dashboard.render.com
+
+GitHub Repositório	✅ engdeveloper51-collab/edm
+
+Render Web Service FREE	✅ edm-raje.onrender.com
+
+Node.js + Express	✅ Rodando
+
+HTTP/HTTPS	✅ Automático
+
+Certificados SSL	✅ Tolerando falta em produção
+
+
+https://github.com/engdeveloper51-collab/edm
+
+
+PS C:\Users\Marcos\Desktop\EDM> git remote add origin https://github.com/engdeveloper51-collab/edm.git
+
+PS C:\Users\Marcos\Desktop\EDM> git branch -M main
+
+PS C:\Users\Marcos\Desktop\EDM> git push -u origin main
