@@ -24,11 +24,14 @@ function loadSslCredentials() {
             cert: fs.readFileSync(SSL_CERT_PATH)
         };
     } catch (err) {
-        console.warn('⚠️  Certificados SSL não encontrados. Usando HTTP.');
-        console.warn(`   SSL_KEY_PATH=${SSL_KEY_PATH}`);
-        console.warn(`   SSL_CERT_PATH=${SSL_CERT_PATH}`);
-        console.warn(`   Motivo: ${err.message}`);
-        return null;
+        if (NODE_ENV === 'production') {
+            console.warn('⚠️  Em produção: certificados SSL não encontrados. Usando HTTP.');
+            return null;
+        }
+        console.error('❌ Não foi possível carregar o certificado SSL:', err.message);
+        console.error(`   SSL_KEY_PATH=${SSL_KEY_PATH}`);
+        console.error(`   SSL_CERT_PATH=${SSL_CERT_PATH}`);
+        process.exit(1);
     }
 }
 
@@ -2355,16 +2358,16 @@ let server;
 async function startServer() {
     await connectDB();
     
-    if (sslOptions) {
+    if (sslOptions && NODE_ENV !== 'production') {
         server = https.createServer(sslOptions, app);
         console.log('🔒 Usando HTTPS (certificados encontrados)');
     } else {
         server = app;
-        console.log('🌐 Usando HTTP (sem certificados SSL)');
+        console.log('🌐 Usando HTTP (produção ou sem certificados SSL)');
     }
 
     server.listen(PORT, '0.0.0.0', () => {
-        const protocol = sslOptions ? 'https' : 'http';
+        const protocol = sslOptions && NODE_ENV !== 'production' ? 'https' : 'http';
         console.log(`\n🚀 Servidor rodando em ${protocol}://localhost:${PORT}`);
         console.log(`📱 Acesso remoto (outros PCs/smartphones): ${protocol}://${LOCAL_IP}:${PORT}`);
         console.log(`📡 API em ${protocol}://localhost:${PORT}/api`);
