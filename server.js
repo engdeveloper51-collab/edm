@@ -24,14 +24,14 @@ function loadSslCredentials() {
             cert: fs.readFileSync(SSL_CERT_PATH)
         };
     } catch (err) {
-        if (NODE_ENV === 'production') {
-            console.warn('⚠️  Em produção: certificados SSL não encontrados. Usando HTTP.');
-            return null;
+        console.warn('⚠️  Certificados SSL não encontrados. Usando HTTP.');
+        console.warn(`   Motivo: ${err.message}`);
+        if (NODE_ENV !== 'production') {
+            console.warn(`   Para HTTPS local, gere certificados em: ${SSL_KEY_PATH}`);
+        } else {
+            console.warn('   Render fornecerá HTTPS automaticamente via reverse proxy.');
         }
-        console.error('❌ Não foi possível carregar o certificado SSL:', err.message);
-        console.error(`   SSL_KEY_PATH=${SSL_KEY_PATH}`);
-        console.error(`   SSL_CERT_PATH=${SSL_CERT_PATH}`);
-        process.exit(1);
+        return null;
     }
 }
 
