@@ -1,5 +1,6 @@
 const express = require('express');
 const sql = require('mssql');
+const mysql = require('mysql2/promise');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
@@ -138,16 +139,83 @@ const config = {
     }
 };
 
+// Support for MySQL via environment flag DB_ENGINE=mysql
+const DB_ENGINE = (process.env.DB_ENGINE || '').toLowerCase();
+
+// MySQL pool (if used)
+let mysqlPool;
+
+async function connectMySQL() {
+    const host = process.env.DB_HOST || process.env.DB_SERVER || '127.0.0.1';
+    const port = Number(process.env.DB_PORT || 3306);
+    const user = process.env.DB_USER || 'edm_user';
+    const password = process.env.DB_PASSWORD || '';
+    const database = process.env.DB_DATABASE || 'db_dlaudo_erp';
+
+    mysqlPool = await mysql.createPool({
+        host,
+        port,
+        user,
+        password,
+        database,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+        charset: 'utf8mb4'
+    });
+
+    // wrapper to mimic mssql request().input().query()
+    function mysqlRequest() {
+        const params = {};
+        return {
+            input(name, _type, value) {
+                params[name] = value;
+                return this;
+            },
+            async query(sqlText) {
+                // replace SQL Server functions with MySQL equivalents
+                let q = String(sqlText)
+                    .replace(/\bISNULL\(/gi, 'IFNULL(')
+                    .replace(/\bSCOPE_IDENTITY\(\)/gi, 'LAST_INSERT_ID()');
+
+                // capture parameter order by scanning @name occurrences
+                const names = [];
+                q = q.replace(/@([a-zA-Z0-9_]+)/g, function(_, n) { names.push(n); return '?'; });
+                const values = names.map(n => params[n]);
+
+                const [rows, fields] = await mysqlPool.execute(q, values);
+
+                // adapt return shape to the code that expects mssql result
+                return {
+                    recordset: Array.isArray(rows) ? rows : [],
+                    recordsets: Array.isArray(rows) ? [rows] : [],
+                    rowsAffected: [(rows && rows.affectedRows) ? rows.affectedRows : (Array.isArray(rows) ? rows.length : 0)]
+                };
+            }
+        };
+    }
+
+    return { pool: mysqlPool, request: mysqlRequest };
+}
+
 // Pool de conexão
 let pool;
 let poolConnected = false;
 
 async function connectDB() {
     try {
-        pool = new sql.ConnectionPool(config);
-        await pool.connect();
-        poolConnected = true;
-        console.log('✅ Conectado ao SQL Server!');
+        if (DB_ENGINE === 'mysql') {
+            const mysqlInfo = await connectMySQL();
+            // mysqlInfo.request returns request factory
+            pool = mysqlInfo;
+            poolConnected = true;
+            console.log('✅ Conectado ao MySQL!');
+        } else {
+            pool = new sql.ConnectionPool(config);
+            await pool.connect();
+            poolConnected = true;
+            console.log('✅ Conectado ao SQL Server!');
+        }
     } catch (err) {
         poolConnected = false;
         console.error('❌ Erro ao conectar ao banco:', err.message);
