@@ -715,8 +715,16 @@
         // Função para carregar imagem com detecção de extensão
         function carregarImagemSlide(slideId, caminhoSemExtensao) {
             const slide = document.getElementById(slideId);
-            const extensoes = ['.jpg', '.png', '.jpeg', '.gif', '.webp'];
+            const extensoes = ['.JPG', '.jpg', '.jpeg', '.png', '.gif', '.webp'];
             let tentativa = 0;
+
+            function normalizarCaminho(caminho) {
+                if (!caminho) return caminho;
+                if (/^(https?:)?\/\//i.test(caminho) || caminho.startsWith('/')) {
+                    return caminho;
+                }
+                return `/${caminho.replace(/^\.\//, '').replace(/^\.\.\//, '')}`;
+            }
 
             function tentar() {
                 if (tentativa >= extensoes.length) {
@@ -725,7 +733,8 @@
                     return;
                 }
 
-                const caminhoCompleto = caminhoSemExtensao + extensoes[tentativa];
+                const caminhoBase = normalizarCaminho(caminhoSemExtensao);
+                const caminhoCompleto = `${caminhoBase}${extensoes[tentativa]}`;
                 const img = new Image();
 
                 img.onload = function () {
@@ -804,10 +813,10 @@
         }
 
         // Carrega as imagens
-        carregarImagemSlide('slide-0', '../Imag/pexels-pok-rie-33563-3829454');
-        carregarImagemSlide('slide-1', '../Imag/ing1');
-        carregarImagemSlide('slide-2', '../Imag/ing2');
-        carregarImagemSlide('slide-3', '../Imag/ing3');
+        carregarImagemSlide('slide-0', 'Imag/pexels-pok-rie-33563-3829454');
+        carregarImagemSlide('slide-1', 'Imag/ing1');
+        carregarImagemSlide('slide-2', 'Imag/ing2');
+        carregarImagemSlide('slide-3', 'Imag/ing3');
 
         // Inicia o carousel
         startAutoplay();
@@ -883,10 +892,10 @@
                 </div>
             `;
 
-            carregarImagemSlide('slide-0', '../Imag/pexels-pok-rie-33563-3829454');
-            carregarImagemSlide('slide-1', '../Imag/ing1');
-            carregarImagemSlide('slide-2', '../Imag/ing2');
-            carregarImagemSlide('slide-3', '../Imag/ing3');
+            carregarImagemSlide('slide-0', 'Imag/pexels-pok-rie-33563-3829454');
+            carregarImagemSlide('slide-1', 'Imag/ing1');
+            carregarImagemSlide('slide-2', 'Imag/ing2');
+            carregarImagemSlide('slide-3', 'Imag/ing3');
             currentSlide = 0;
             startAutoplay();
             setTitulo("Sistema GIS");
