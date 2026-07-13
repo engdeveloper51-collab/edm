@@ -19,3 +19,19 @@ PS C:\Users\Marcos\Desktop\EDM> git remote add origin https://github.com/engdeve
 PS C:\Users\Marcos\Desktop\EDM> git branch -M main
 
 PS C:\Users\Marcos\Desktop\EDM> git push -u origin main
+
+Ip:212.227.165.26
+SO: Ubuntu 24.04
+User:root
+Senha:O84xflL0ngKe0r
+
+
+id      username        senha   Id_nivel_acesso
+1       admin   $2a$10$fnU3IzMGdxwNFJUbWTnWIOXoo64DgA8.SYL6Pd2e5AhVwLLlYAW1W    1
+2       user1   password456     2
+3       user2   password789     2
+4       user3   mypass  2
+5       admin   senha123        1
+6       user1   password456     2
+7       user2   password789     2
+8       user3   mypass  2

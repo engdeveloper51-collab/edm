@@ -145,6 +145,53 @@ const DB_ENGINE = (process.env.DB_ENGINE || '').toLowerCase();
 // MySQL pool (if used)
 let mysqlPool;
 
+function splitSqlStatements(text) {
+    const statements = [];
+    let current = '';
+    let inSingleQuote = false;
+    let inDoubleQuote = false;
+
+    for (let i = 0; i < text.length; i += 1) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '\'' && !inDoubleQuote) {
+            if (inSingleQuote && next === '\'') {
+                current += "''";
+                i += 1;
+            } else {
+                inSingleQuote = !inSingleQuote;
+            }
+            current += char;
+            continue;
+        }
+
+        if (char === '"' && !inSingleQuote) {
+            inDoubleQuote = !inDoubleQuote;
+            current += char;
+            continue;
+        }
+
+        if (char === ';' && !inSingleQuote && !inDoubleQuote) {
+            const statement = current.trim();
+            if (statement) {
+                statements.push(statement);
+            }
+            current = '';
+            continue;
+        }
+
+        current += char;
+    }
+
+    const lastStatement = current.trim();
+    if (lastStatement) {
+        statements.push(lastStatement);
+    }
+
+    return statements;
+}
+
 async function connectMySQL() {
     const host = process.env.DB_HOST || process.env.DB_SERVER || '127.0.0.1';
     const port = Number(process.env.DB_PORT || 3306);
@@ -173,24 +220,34 @@ async function connectMySQL() {
                 return this;
             },
             async query(sqlText) {
-                // replace SQL Server functions with MySQL equivalents
-                let q = String(sqlText)
-                    .replace(/\bISNULL\(/gi, 'IFNULL(')
-                    .replace(/\bSCOPE_IDENTITY\(\)/gi, 'LAST_INSERT_ID()');
-
-                // capture parameter order by scanning @name occurrences
-                const names = [];
-                q = q.replace(/@([a-zA-Z0-9_]+)/g, function(_, n) { names.push(n); return '?'; });
-                const values = names.map(n => params[n]);
-
-                const [rows, fields] = await mysqlPool.execute(q, values);
-
-                // adapt return shape to the code that expects mssql result
-                return {
-                    recordset: Array.isArray(rows) ? rows : [],
-                    recordsets: Array.isArray(rows) ? [rows] : [],
-                    rowsAffected: [(rows && rows.affectedRows) ? rows.affectedRows : (Array.isArray(rows) ? rows.length : 0)]
+                const statements = splitSqlStatements(String(sqlText));
+                let lastResult = {
+                    recordset: [],
+                    recordsets: [],
+                    rowsAffected: [0]
                 };
+
+                for (const statement of statements) {
+                    // replace SQL Server functions with MySQL equivalents
+                    let q = statement
+                        .replace(/\bISNULL\(/gi, 'IFNULL(')
+                        .replace(/\bSCOPE_IDENTITY\(\)/gi, 'LAST_INSERT_ID()');
+
+                    // capture parameter order by scanning @name occurrences
+                    const names = [];
+                    q = q.replace(/@([a-zA-Z0-9_]+)/g, function(_, n) { names.push(n); return '?'; });
+                    const values = names.map(n => params[n]);
+
+                    const [rows, fields] = await mysqlPool.execute(q, values);
+
+                    lastResult = {
+                        recordset: Array.isArray(rows) ? rows : [],
+                        recordsets: Array.isArray(rows) ? [rows] : [],
+                        rowsAffected: [(rows && rows.affectedRows) ? rows.affectedRows : (Array.isArray(rows) ? rows.length : 0)]
+                    };
+                }
+
+                return lastResult;
             }
         };
     }
