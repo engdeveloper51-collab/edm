@@ -12,6 +12,8 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
+app.set('trust proxy', true);
+app.disable('x-powered-by');
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_only_change_this_secret';
 
 const SSL_KEY_PATH = process.env.SSL_KEY_PATH || path.join(__dirname, 'localhost+1-key.pem');

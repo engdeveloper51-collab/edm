@@ -690,6 +690,13 @@
                 return;
             }
 
+            const isSecureContext = window.isSecureContext || window.location.protocol === 'https:';
+            const isLocalhost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+            if (!isSecureContext && !isLocalhost) {
+                mostrarNotificacao('⚠️ A geolocalização só funciona em HTTPS. Acesse o site com https://', 'error');
+                return;
+            }
+
             mostrarNotificacao('📍 Obtendo localização com alta precisão...', 'info');
 
             const MAX_ACCURACY_METERS = 40;

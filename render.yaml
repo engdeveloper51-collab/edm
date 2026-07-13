@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: edm
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DB_ENGINE
+        value: mysql
+      - key: DB_HOST
+        value: your-vps-host
+      - key: DB_PORT
+        value: 3306
+      - key: DB_USER
+        value: your-db-user
+      - key: DB_PASSWORD
+        value: your-db-password
+      - key: DB_DATABASE
+        value: your-db-name
