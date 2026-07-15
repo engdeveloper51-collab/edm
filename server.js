@@ -2,6 +2,7 @@ const express = require('express');
 const sql = require('mssql');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
+const { initializeMysqlSchema } = require('./mysql-compat');
 const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
@@ -141,8 +142,8 @@ const config = {
     }
 };
 
-// Support for MySQL via environment flag DB_ENGINE=mysql
-const DB_ENGINE = (process.env.DB_ENGINE || '').toLowerCase();
+// Select database engine automatically from environment variables when possible
+const DB_ENGINE = resolveDatabaseEngine({ env: process.env });
 
 // MySQL pool (if used)
 let mysqlPool;
@@ -200,6 +201,7 @@ async function connectMySQL() {
     const user = process.env.DB_USER || 'edm_user';
     const password = process.env.DB_PASSWORD || '';
     const database = process.env.DB_DATABASE || 'db_dlaudo_erp';
+    const connectionLimit = Number(process.env.DB_CONNECTION_LIMIT || 10);
 
     mysqlPool = await mysql.createPool({
         host,
@@ -208,10 +210,18 @@ async function connectMySQL() {
         password,
         database,
         waitForConnections: true,
-        connectionLimit: 10,
+        connectionLimit,
         queueLimit: 0,
         charset: 'utf8mb4'
     });
+
+    try {
+        const schemaSql = fs.readFileSync(path.join(__dirname, 'mysql-init', '01-schema.sql'), 'utf8');
+        await initializeMysqlSchema(mysqlPool, schemaSql);
+        console.log('✅ Schema MySQL aplicado com sucesso');
+    } catch (schemaErr) {
+        console.warn('⚠️ Não foi possível aplicar o schema MySQL automaticamente:', schemaErr.message);
+    }
 
     // wrapper to mimic mssql request().input().query()
     function mysqlRequest() {
@@ -230,17 +240,15 @@ async function connectMySQL() {
                 };
 
                 for (const statement of statements) {
-                    // replace SQL Server functions with MySQL equivalents
                     let q = statement
                         .replace(/\bISNULL\(/gi, 'IFNULL(')
                         .replace(/\bSCOPE_IDENTITY\(\)/gi, 'LAST_INSERT_ID()');
 
-                    // capture parameter order by scanning @name occurrences
                     const names = [];
                     q = q.replace(/@([a-zA-Z0-9_]+)/g, function(_, n) { names.push(n); return '?'; });
                     const values = names.map(n => params[n]);
 
-                    const [rows, fields] = await mysqlPool.execute(q, values);
+                    const [rows] = await mysqlPool.execute(q, values);
 
                     lastResult = {
                         recordset: Array.isArray(rows) ? rows : [],
@@ -1638,9 +1646,11 @@ app.post('/api/tipos-activos', async (req, res) => {
             return res.status(400).json({ error: 'Tipo de ativo é obrigatório' });
         }
 
+        const valorTipo = String(tipo_poste).trim().replace(/\s+/g, ' ');
+
         // Verificar se tipo já existe
         const tipoExiste = await pool.request()
-            .input('tipo_poste', sql.VarChar(100), tipo_poste)
+            .input('tipo_poste', sql.VarChar(100), valorTipo)
             .query(`SELECT id FROM geo_tipo_poste WHERE UPPER(tipo_poste) = UPPER(@tipo_poste)`);
 
         if (tipoExiste.recordset.length > 0) {
@@ -1648,7 +1658,7 @@ app.post('/api/tipos-activos', async (req, res) => {
         }
 
         const result = await pool.request()
-            .input('tipo_poste', sql.VarChar(100), tipo_poste)
+            .input('tipo_poste', sql.VarChar(100), valorTipo)
             .query(`
                 INSERT INTO geo_tipo_poste (tipo_poste)
                 VALUES (@tipo_poste);
@@ -1684,9 +1694,11 @@ app.put('/api/tipos-activos/:id', async (req, res) => {
             return res.status(400).json({ error: 'Tipo de ativo é obrigatório' });
         }
 
+        const valorTipo = String(tipo_poste).trim().replace(/\s+/g, ' ');
+
         const result = await pool.request()
             .input('id', sql.Int, req.params.id)
-            .input('tipo_poste', sql.VarChar(100), tipo_poste)
+            .input('tipo_poste', sql.VarChar(100), valorTipo)
             .query(`
                 UPDATE geo_tipo_poste 
                 SET tipo_poste = @tipo_poste

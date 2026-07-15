@@ -743,7 +743,7 @@
 
             try {
                 const payload = {
-                    tipo_poste: normalizarTipo(txtTipo)
+                    tipo_poste: preservarTexto(txtTipo)
                 };
 
                 const url = modo === 'editar'
@@ -815,8 +815,8 @@
             document.querySelectorAll('#tbodyTipos tr').forEach(tr => tr.classList.remove('selecionado'));
         }
 
-        // ==================== NORMALIZAR TIPO ====================
-        function normalizarTipo(texto) {
+        // ==================== PRESERVAR TEXTO ====================
+        function preservarTexto(texto) {
             if (!texto) return texto;
             return texto.trim().replace(/\s+/g, ' ');
         }
