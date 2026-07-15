@@ -743,7 +743,7 @@
 
             try {
                 const payload = {
-                    tipo_poste: primeiraLetraMaiuscula(txtTipo)
+                    tipo_poste: normalizarTipo(txtTipo)
                 };
 
                 const url = modo === 'editar'
@@ -815,10 +815,10 @@
             document.querySelectorAll('#tbodyTipos tr').forEach(tr => tr.classList.remove('selecionado'));
         }
 
-        // ==================== PRIMEIRA LETRA MAIÚSCULA ====================
-        function primeiraLetraMaiuscula(texto) {
+        // ==================== NORMALIZAR TIPO ====================
+        function normalizarTipo(texto) {
             if (!texto) return texto;
-            return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+            return texto.trim().replace(/\s+/g, ' ');
         }
 
         // ==================== FECHAR MODAL ====================
