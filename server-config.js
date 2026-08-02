@@ -8,6 +8,17 @@ function resolveServerMode({ env = process.env, sslOptions = null } = {}) {
   };
 }
 
+function resolveDatabaseEngine({ env = process.env } = {}) {
+  const engine = String(env.DB_ENGINE || env.DB_TYPE || 'mysql').toLowerCase();
+
+  if (engine === 'mssql' || engine === 'sqlserver') {
+    return 'mssql';
+  }
+
+  return 'mysql';
+}
+
 module.exports = {
-  resolveServerMode
+  resolveServerMode,
+  resolveDatabaseEngine
 };
