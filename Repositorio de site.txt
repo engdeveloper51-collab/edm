@@ -10,6 +10,7 @@ HTTP/HTTPS	✅ Automático
 
 Certificados SSL	✅ Tolerando falta em produção
 
+Dados githup
 
 https://github.com/engdeveloper51-collab/edm
 
@@ -20,17 +21,91 @@ PS C:\Users\Marcos\Desktop\EDM> git branch -M main
 
 PS C:\Users\Marcos\Desktop\EDM> git push -u origin main
 
+Dados servidor vps
+
 Ip:212.227.165.26
 SO: Ubuntu 24.04
 User:root
 Senha:O84xflL0ngKe0r
 
-id      username        senha   Id_nivel_acesso
-1       admin   $2a$10$fnU3IzMGdxwNFJUbWTnWIOXoo64DgA8.SYL6Pd2e5AhVwLLlYAW1W    1
-2       user1   password456     2
-3       user2   password789     2
-4       user3   mypass  2
-5       admin   senha123        1
-6       user1   password456     2
-7       user2   password789     2
-8       user3   mypass  2
+Dados mysql 
+
+Host: 127.0.0.1
+Porta: 3306
+Banco: db_dlaudo_erp
+Utilizador: edm_user
+Password: EdmPass!123
+
+--- ENV ---
+--- DOCKER ---
+NAMES     STATUS
+mysql     Up 2 weeks
+--- FILES ---
+./.env
+./.env.bak
+./.env.example
+./.env.production
+./mysql-compat.js
+root@ubuntu:~/EDM# cd /root/EDM ; echo '--- .env ---' ; sed -n '1,200p' .env ; echo '--- .env.production ---' ; sed -n '1,200p' .env.production ; echo '--- .env.example ---' ; sed -n '1,200p' .env.example
+
+d: command not found
+--- .env ---
+PORT=3000
+
+# MySQL
+DB_SERVER=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=db_dlaudo_erp
+DB_USER=edm_user
+DB_PASSWORD=EdmPass!123
+DB_CONNECTION_TIMEOUT=60000
+DB_CONNECTION_LIMIT=10
+
+# Auth
+JWT_SECRET=troque_esta_chave_em_producao
+JWT_EXPIRES_IN=8h
+
+# SSL
+SSL_KEY_PATH=localhost+1-key.pem
+SSL_CERT_PATH=localhost+1.pem
+--- .env.production ---
+��NODE_ENV=production
+JWT_SECRET=sua_chave_secreta_aqui
+--- .env.example ---
+PORT=3000
+
+# SQL Server
+DB_SERVER=localhost
+DB_DATABASE=db_dlaudo_erp
+DB_USER=sa
+DB_PASSWORD=12345
+DB_ENCRYPT=false
+DB_TRUST_CERT=true
+DB_CONNECTION_TIMEOUT=60000
+DB_REQUEST_TIMEOUT=60000
+
+# Auth
+JWT_SECRET=troque_esta_chave_em_producao
+JWT_EXPIRES_IN=8h
+
+# SSL
+# Defina os caminhos dos arquivos PEM se quiser usar certificados personalizados.
+SSL_KEY_PATH=localhost+1-key.pem
+SSL_CERT_PATH=localhost+1.pem
+
++-------------------------+
+| Tables_in_db_dlaudo_erp |
++-------------------------+
+| geo_activo_componente   |
+| geo_bairro              |
+| geo_cidade              |
+| geo_poste               |
+| geo_postecadastro       |
+| geo_tipo_poste          |
+| nivel_acesso            |
+| usuario                 |
+| v_user                  |
++-------------------------+
+root@ubuntu:~/EDM# R^C
+root@ubuntu:~/EDM# 
++-------------------------+

@@ -1,8 +1,6 @@
 const express = require('express');
 const sql = require('mssql');
-const mysql = require('mysql2/promise');
 const cors = require('cors');
-const { initializeMysqlSchema } = require('./mysql-compat');
 const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
@@ -10,8 +8,6 @@ const https = require('https');
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { resolveDatabaseEngine } = require('./server-config');
-const { createAtivoRecord, createAtivoAndCadastro } = require('./active-creation');
 require('dotenv').config();
 
 const app = express();
@@ -144,147 +140,16 @@ const config = {
     }
 };
 
-// Select database engine automatically from environment variables when possible
-const DB_ENGINE = resolveDatabaseEngine({ env: process.env });
-
-// MySQL pool (if used)
-let mysqlPool;
-
-function splitSqlStatements(text) {
-    const statements = [];
-    let current = '';
-    let inSingleQuote = false;
-    let inDoubleQuote = false;
-
-    for (let i = 0; i < text.length; i += 1) {
-        const char = text[i];
-        const next = text[i + 1];
-
-        if (char === '\'' && !inDoubleQuote) {
-            if (inSingleQuote && next === '\'') {
-                current += "''";
-                i += 1;
-            } else {
-                inSingleQuote = !inSingleQuote;
-            }
-            current += char;
-            continue;
-        }
-
-        if (char === '"' && !inSingleQuote) {
-            inDoubleQuote = !inDoubleQuote;
-            current += char;
-            continue;
-        }
-
-        if (char === ';' && !inSingleQuote && !inDoubleQuote) {
-            const statement = current.trim();
-            if (statement) {
-                statements.push(statement);
-            }
-            current = '';
-            continue;
-        }
-
-        current += char;
-    }
-
-    const lastStatement = current.trim();
-    if (lastStatement) {
-        statements.push(lastStatement);
-    }
-
-    return statements;
-}
-
-async function connectMySQL() {
-    const host = process.env.DB_HOST || process.env.DB_SERVER || '127.0.0.1';
-    const port = Number(process.env.DB_PORT || 3306);
-    const user = process.env.DB_USER || 'edm_user';
-    const password = process.env.DB_PASSWORD || '';
-    const database = process.env.DB_DATABASE || 'db_dlaudo_erp';
-    const connectionLimit = Number(process.env.DB_CONNECTION_LIMIT || 10);
-
-    mysqlPool = await mysql.createPool({
-        host,
-        port,
-        user,
-        password,
-        database,
-        waitForConnections: true,
-        connectionLimit,
-        queueLimit: 0,
-        charset: 'utf8mb4'
-    });
-
-    try {
-        const schemaSql = fs.readFileSync(path.join(__dirname, 'mysql-init', '01-schema.sql'), 'utf8');
-        await initializeMysqlSchema(mysqlPool, schemaSql);
-        console.log('✅ Schema MySQL aplicado com sucesso');
-    } catch (schemaErr) {
-        console.warn('⚠️ Não foi possível aplicar o schema MySQL automaticamente:', schemaErr.message);
-    }
-
-    // wrapper to mimic mssql request().input().query()
-    function mysqlRequest() {
-        const params = {};
-        return {
-            input(name, _type, value) {
-                params[name] = value;
-                return this;
-            },
-            async query(sqlText) {
-                const statements = splitSqlStatements(String(sqlText));
-                let lastResult = {
-                    recordset: [],
-                    recordsets: [],
-                    rowsAffected: [0]
-                };
-
-                for (const statement of statements) {
-                    let q = statement
-                        .replace(/\bISNULL\(/gi, 'IFNULL(')
-                        .replace(/\bSCOPE_IDENTITY\(\)/gi, 'LAST_INSERT_ID()');
-
-                    const names = [];
-                    q = q.replace(/@([a-zA-Z0-9_]+)/g, function(_, n) { names.push(n); return '?'; });
-                    const values = names.map(n => params[n]);
-
-                    const [rows] = await mysqlPool.execute(q, values);
-
-                    lastResult = {
-                        recordset: Array.isArray(rows) ? rows : [],
-                        recordsets: Array.isArray(rows) ? [rows] : [],
-                        rowsAffected: [(rows && rows.affectedRows) ? rows.affectedRows : (Array.isArray(rows) ? rows.length : 0)]
-                    };
-                }
-
-                return lastResult;
-            }
-        };
-    }
-
-    return { pool: mysqlPool, request: mysqlRequest };
-}
-
 // Pool de conexão
 let pool;
 let poolConnected = false;
 
 async function connectDB() {
     try {
-        if (DB_ENGINE === 'mysql') {
-            const mysqlInfo = await connectMySQL();
-            // mysqlInfo.request returns request factory
-            pool = mysqlInfo;
-            poolConnected = true;
-            console.log('✅ Conectado ao MySQL!');
-        } else {
-            pool = new sql.ConnectionPool(config);
-            await pool.connect();
-            poolConnected = true;
-            console.log('✅ Conectado ao SQL Server!');
-        }
+        pool = new sql.ConnectionPool(config);
+        await pool.connect();
+        poolConnected = true;
+        console.log('✅ Conectado ao SQL Server!');
     } catch (err) {
         poolConnected = false;
         console.error('❌ Erro ao conectar ao banco:', err.message);
@@ -567,19 +432,20 @@ app.post('/api/activos', upload.single('imagem'), async (req, res) => {
             imagemBinaria = req.file.buffer;
         }
 
-        const { id: ativoId } = await createAtivoRecord({
-            pool,
-            payload: {
-                id_bairro,
-                id_tipo_poste,
-                latitude: String(latitude).replace('.', ','),
-                longitude: String(longitude).replace('.', ','),
-                fonte_dados: codigo,
-                imagem: imagemBinaria
-            },
-            typeFactory: sql
-        });
+        const result = await pool.request()
+            .input('id_bairro', sql.Int, id_bairro)
+            .input('id_tipo_poste', sql.Int, id_tipo_poste)
+            .input('latitude', sql.VarChar(50), String(latitude).replace('.', ','))
+            .input('longitude', sql.VarChar(50), String(longitude).replace('.', ','))
+            .input('fonte_dados', sql.VarChar(50), codigo)
+            .input('imagem', sql.VarBinary(sql.MAX), imagemBinaria)
+            .query(`
+                INSERT INTO geo_poste (id_bairro, id_tipo_poste, latitude, longitude, fonte_dados, imgem)
+                VALUES (@id_bairro, @id_tipo_poste, @latitude, @longitude, @fonte_dados, @imagem);
+                SELECT SCOPE_IDENTITY() as id;
+            `);
 
+        const ativoId = result.recordset[0].id;
         console.log(`✅ Ativo criado com ID: ${ativoId}`);
 
         res.status(201).json({
@@ -825,19 +691,20 @@ app.post('/api/cadastro-activos', upload.single('imagem'), async (req, res) => {
             imagemBinaria = req.file.buffer;
         }
 
-        const { id: ativoId } = await createAtivoAndCadastro({
-            pool,
-            payload: {
-                id_bairro,
-                id_tipo_poste,
-                latitude: String(latitude).replace('.', ','),
-                longitude: String(longitude).replace('.', ','),
-                fonte_dados: codigo,
-                imagem: imagemBinaria
-            },
-            typeFactory: sql
-        });
+        const result = await pool.request()
+            .input('id_bairro', sql.Int, id_bairro)
+            .input('id_tipo_poste', sql.Int, id_tipo_poste)
+            .input('latitude', sql.VarChar(50), String(latitude).replace('.', ','))
+            .input('longitude', sql.VarChar(50), String(longitude).replace('.', ','))
+            .input('fonte_dados', sql.VarChar(50), codigo)
+            .input('imagem', sql.VarBinary(sql.MAX), imagemBinaria)
+            .query(`
+                INSERT INTO geo_postecadastro (id_bairro, id_tipo_poste, latitude, longitude, fonte_dados, imgem)
+                VALUES (@id_bairro, @id_tipo_poste, @latitude, @longitude, @fonte_dados, @imagem);
+                SELECT SCOPE_IDENTITY() as id;
+            `);
 
+        const ativoId = result.recordset[0].id;
         console.log(`✅ Cadastro criado com ID: ${ativoId}`);
 
         res.status(201).json({
@@ -1055,18 +922,18 @@ app.get('/api/componentes/:ativoId', async (req, res) => {
 
         const result = await pool.request()
             .input('ativoId', sql.Int, req.params.ativoId)
-            .query([
-                'SELECT',
-                '    id,',
-                '    id_activo as ativoId,',
-                '    componente as nome,',
-                '    estado,',
-                '    lat,',
-                '    `long` as `long`',
-                'FROM geo_activo_componente',
-                'WHERE id_activo = @ativoId',
-                'ORDER BY componente'
-            ].join(' '));
+            .query(`
+                SELECT 
+                    id, 
+                    id_activo as ativoId,
+                    componente as nome, 
+                    estado,
+                    lat,
+                    long
+                FROM geo_activo_componente 
+                WHERE id_activo = @ativoId
+                ORDER BY componente
+            `);
 
         console.log(`✅ ${result.recordset.length} componentes carregados para ativo ${req.params.ativoId}`);
         res.json(result.recordset);
