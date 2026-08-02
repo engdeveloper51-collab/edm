@@ -25,7 +25,6 @@ SO: Ubuntu 24.04
 User:root
 Senha:O84xflL0ngKe0r
 
-
 id      username        senha   Id_nivel_acesso
 1       admin   $2a$10$fnU3IzMGdxwNFJUbWTnWIOXoo64DgA8.SYL6Pd2e5AhVwLLlYAW1W    1
 2       user1   password456     2

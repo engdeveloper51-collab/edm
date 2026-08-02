@@ -996,7 +996,7 @@
                 <h2>📋 Dados do Activo</h2>
                 <div class="cadastro-form-group">
                     <label>Código / Activo</label>
-                    <input type="text" id="codigoAtivo" placeholder="001">
+                    <input type="text" id="codigoAtivo" placeholder="005">
                 </div>
                 <div class="cadastro-form-group">
                     <label>Tipo de Activo</label>
@@ -1504,13 +1504,38 @@
 
         // ==================== MAPEADOR DE CÓDIGO ====================
         function mapeadorCodigo() {
-            const codigo = document.getElementById('codigoAtivo').value;
+            const codigo = document.getElementById('codigoAtivo').value.trim();
+            const tipoAtivo = document.getElementById('tipoAtivo');
+            const componentes = document.getElementById('componentes');
+
+            const allowed = ['005','006','007','008'];
+            if (!allowed.includes(codigo)) {
+                document.getElementById('codigoAtivo').value = '';
+                tipoAtivo.value = '';
+                componentes.value = '';
+                componentes.style.display = 'block';
+                componentes.placeholder = '';
+                if (codigo) {
+                    mostrarNotificacao('Código inválido. Só são permitidos: 005, 006, 007, 008', 'error');
+                }
+                return;
+            }
+
             if (MAPEADOR_CODIGOS[codigo]) {
-                document.getElementById('tipoAtivo').value = MAPEADOR_CODIGOS[codigo];
-                atualizarComponentes();
+                tipoAtivo.value = MAPEADOR_CODIGOS[codigo];
+                const listaComponentes = COMPONENTES_TIPOS[tipoAtivo.value] || [];
+                componentes.value = listaComponentes.join(', ');
+                componentes.style.display = 'block';
+                componentes.placeholder = 'Componentes do ativo';
+                mostrarNotificacao('✅ Código permitido', 'success');
             } else {
-                document.getElementById('tipoAtivo').value = '';
-                document.getElementById('componentes').value = '';
+                tipoAtivo.value = '';
+                componentes.value = '';
+                componentes.style.display = 'block';
+                componentes.placeholder = '';
+                if (codigo) {
+                    mostrarNotificacao('❌ Não permitido', 'error');
+                }
             }
         }
 

@@ -1027,21 +1027,31 @@
 
         // ==================== MAPEADOR DE CÓDIGO ====================
         function mapeadorCodigo() {
-            const codigo = document.getElementById('codigoAtivo').value;
-            if (MAPEADOR_CODIGOS[codigo]) {
-                document.getElementById('tipoAtivo').value = MAPEADOR_CODIGOS[codigo];
-                atualizarComponentes();
-            } else {
-                document.getElementById('tipoAtivo').value = '';
-                document.getElementById('componentes').value = '';
+            const codigoInput = document.getElementById('codigoAtivo');
+            const codigo = codigoInput.value.trim();
+            const tipoAtivo = document.getElementById('tipoAtivo');
+            const componentes = document.getElementById('componentes');
+
+            const allowed = ['001','002','003','004'];
+            if (!allowed.includes(codigo)) {
+                mostrarNotificacao('Código inválido. Só são permitidos: 001, 002, 003, 004', 'error');
+                codigoInput.value = '';
+                tipoAtivo.value = '';
+                componentes.value = 'Indisponivel';
+                componentes.style.display = 'block';
+                return;
             }
+
+            // código válido
+            tipoAtivo.value = MAPEADOR_CODIGOS[codigo] || '';
+            componentes.value = 'Indisponivel';
+            componentes.style.display = 'block';
+            componentes.placeholder = '';
         }
 
         // ==================== COMPONENTES ====================
         function atualizarComponentes() {
-            const tipoAtivo = document.getElementById('tipoAtivo').value;
-            const componentes = COMPONENTES_TIPOS[tipoAtivo] || [];
-            document.getElementById('componentes').value = componentes.join(', ');
+            document.getElementById('componentes').value = 'Indisponivel';
         }
 
         // ==================== CÂMERA ====================

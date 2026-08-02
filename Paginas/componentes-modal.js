@@ -106,6 +106,22 @@ function editarComponenteFilho(id, nome, estado) {
                         <option value="Pendente">Pendente</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label>Quantidade:</label>
+                    <select id="compQuantidadeFilho">
+                        <option value="">Seleccione</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
                 <div class="modal-buttons">
                     <button class="cancel" onclick="voltarParaListaComponentes()">Voltar</button>
                     <button onclick="salvarComponenteFilho()">Salvar</button>
@@ -121,6 +137,7 @@ function editarComponenteFilho(id, nome, estado) {
     document.getElementById('compNomeFilho').value = nome;
     document.getElementById('compEstadoAtualFilho').value = estado;
     document.getElementById('compNovoEstadoFilho').value = '';
+    document.getElementById('compQuantidadeFilho').value = '';
 
     // Fecha o modal de lista e abre o de edição
     document.getElementById('modalComponentesFilho').classList.remove('active');
@@ -130,9 +147,16 @@ function editarComponenteFilho(id, nome, estado) {
 // ==================== SALVAR COMPONENTE ====================
 async function salvarComponenteFilho() {
     const novoEstado = document.getElementById('compNovoEstadoFilho').value;
+    const quantidadeValue = document.getElementById('compQuantidadeFilho').value;
+    const quantidade = quantidadeValue ? parseInt(quantidadeValue) : null;
 
     if (!novoEstado) {
         mostrarNotificacao('Seleccione um novo estado', 'error');
+        return;
+    }
+
+    if (!quantidadeValue) {
+        mostrarNotificacao('Seleccione a quantidade', 'error');
         return;
     }
 
@@ -142,7 +166,7 @@ async function salvarComponenteFilho() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ estado: novoEstado })
+            body: JSON.stringify({ estado: novoEstado, quantidade: quantidade })
         });
 
         if (!response.ok) {
