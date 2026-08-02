@@ -11,6 +11,7 @@ const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { resolveDatabaseEngine } = require('./server-config');
+const { createAtivoRecord, createAtivoAndCadastro } = require('./active-creation');
 require('dotenv').config();
 
 const app = express();
@@ -566,20 +567,19 @@ app.post('/api/activos', upload.single('imagem'), async (req, res) => {
             imagemBinaria = req.file.buffer;
         }
 
-        const result = await pool.request()
-            .input('id_bairro', sql.Int, id_bairro)
-            .input('id_tipo_poste', sql.Int, id_tipo_poste)
-            .input('latitude', sql.VarChar(50), String(latitude).replace('.', ','))
-            .input('longitude', sql.VarChar(50), String(longitude).replace('.', ','))
-            .input('fonte_dados', sql.VarChar(50), codigo)
-            .input('imagem', sql.VarBinary(sql.MAX), imagemBinaria)
-            .query(`
-                INSERT INTO geo_poste (id_bairro, id_tipo_poste, latitude, longitude, fonte_dados, imgem)
-                VALUES (@id_bairro, @id_tipo_poste, @latitude, @longitude, @fonte_dados, @imagem);
-                SELECT SCOPE_IDENTITY() as id;
-            `);
+        const { id: ativoId } = await createAtivoRecord({
+            pool,
+            payload: {
+                id_bairro,
+                id_tipo_poste,
+                latitude: String(latitude).replace('.', ','),
+                longitude: String(longitude).replace('.', ','),
+                fonte_dados: codigo,
+                imagem: imagemBinaria
+            },
+            typeFactory: sql
+        });
 
-        const ativoId = result.recordset[0].id;
         console.log(`✅ Ativo criado com ID: ${ativoId}`);
 
         res.status(201).json({
@@ -825,20 +825,19 @@ app.post('/api/cadastro-activos', upload.single('imagem'), async (req, res) => {
             imagemBinaria = req.file.buffer;
         }
 
-        const result = await pool.request()
-            .input('id_bairro', sql.Int, id_bairro)
-            .input('id_tipo_poste', sql.Int, id_tipo_poste)
-            .input('latitude', sql.VarChar(50), String(latitude).replace('.', ','))
-            .input('longitude', sql.VarChar(50), String(longitude).replace('.', ','))
-            .input('fonte_dados', sql.VarChar(50), codigo)
-            .input('imagem', sql.VarBinary(sql.MAX), imagemBinaria)
-            .query(`
-                INSERT INTO geo_postecadastro (id_bairro, id_tipo_poste, latitude, longitude, fonte_dados, imgem)
-                VALUES (@id_bairro, @id_tipo_poste, @latitude, @longitude, @fonte_dados, @imagem);
-                SELECT SCOPE_IDENTITY() as id;
-            `);
+        const { id: ativoId } = await createAtivoAndCadastro({
+            pool,
+            payload: {
+                id_bairro,
+                id_tipo_poste,
+                latitude: String(latitude).replace('.', ','),
+                longitude: String(longitude).replace('.', ','),
+                fonte_dados: codigo,
+                imagem: imagemBinaria
+            },
+            typeFactory: sql
+        });
 
-        const ativoId = result.recordset[0].id;
         console.log(`✅ Cadastro criado com ID: ${ativoId}`);
 
         res.status(201).json({
@@ -1056,18 +1055,18 @@ app.get('/api/componentes/:ativoId', async (req, res) => {
 
         const result = await pool.request()
             .input('ativoId', sql.Int, req.params.ativoId)
-            .query(`
-                SELECT 
-                    id, 
-                    id_activo as ativoId,
-                    componente as nome, 
-                    estado,
-                    lat,
-                    long
-                FROM geo_activo_componente 
-                WHERE id_activo = @ativoId
-                ORDER BY componente
-            `);
+            .query([
+                'SELECT',
+                '    id,',
+                '    id_activo as ativoId,',
+                '    componente as nome,',
+                '    estado,',
+                '    lat,',
+                '    `long` as `long`',
+                'FROM geo_activo_componente',
+                'WHERE id_activo = @ativoId',
+                'ORDER BY componente'
+            ].join(' '));
 
         console.log(`✅ ${result.recordset.length} componentes carregados para ativo ${req.params.ativoId}`);
         res.json(result.recordset);

@@ -1190,7 +1190,7 @@
                     formData.append('imagem', imagemSelecionada, 'captura.jpg');
                 }
 
-                const resAtivo = await fetch(`${API_URL}/cadastro-activos`, {
+                const resAtivo = await fetch(`${API_URL}/activos`, {
                     method: 'POST',
                     body: formData
                 });
