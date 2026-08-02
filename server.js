@@ -1,5 +1,6 @@
 const express = require('express');
 const sql = require('mssql');
+const mysqlCompat = require('./mysql-compat');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
@@ -121,7 +122,9 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 // Os arquivos estáticos serão servidos no final, após todas as rotas
 
 // ==================== CONFIGURAÇÃO DO BANCO ====================
-const config = {
+const dbEngine = String(process.env.DB_ENGINE || 'mysql').toLowerCase();
+
+const config = dbEngine === 'mssql' ? {
     server: process.env.DB_SERVER || 'localhost',
     database: process.env.DB_DATABASE || 'db_dlaudo_erp',
     authentication: {
@@ -138,6 +141,15 @@ const config = {
         connectionTimeout: Number(process.env.DB_CONNECTION_TIMEOUT || 60000),
         requestTimeout: Number(process.env.DB_REQUEST_TIMEOUT || 60000)
     }
+} : {
+    host: process.env.DB_SERVER || '127.0.0.1',
+    port: Number(process.env.DB_PORT || 3306),
+    user: process.env.DB_USER || 'edm_user',
+    password: process.env.DB_PASSWORD || 'EdmPass!123',
+    database: process.env.DB_DATABASE || 'db_dlaudo_erp',
+    waitForConnections: true,
+    connectionLimit: Number(process.env.DB_CONNECTION_LIMIT || 10),
+    charset: 'utf8mb4'
 };
 
 // Pool de conexão
@@ -146,10 +158,18 @@ let poolConnected = false;
 
 async function connectDB() {
     try {
-        pool = new sql.ConnectionPool(config);
+        if (dbEngine === 'mssql') {
+            pool = new sql.ConnectionPool(config);
+            await pool.connect();
+            poolConnected = true;
+            console.log('✅ Conectado ao SQL Server!');
+            return;
+        }
+
+        pool = new mysqlCompat.ConnectionPool(config);
         await pool.connect();
         poolConnected = true;
-        console.log('✅ Conectado ao SQL Server!');
+        console.log('✅ Conectado ao MySQL!');
     } catch (err) {
         poolConnected = false;
         console.error('❌ Erro ao conectar ao banco:', err.message);
