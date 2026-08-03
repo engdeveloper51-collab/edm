@@ -2371,6 +2371,14 @@ app.get('/extenca', (req, res) => {
 
 // ==================== SERVIR FICHEIROS ESTÁTICOS ====================
 // Adicionar AQUI, após todas as rotas da API e páginas específicas
+app.use((req, res, next) => {
+    if (req.path.match(/\.(html|css|js|json)$/i)) {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+    }
+    next();
+});
 app.use(express.static('Paginas'));
 app.use(express.static(path.join(__dirname))); // Raiz
 app.use(express.static(path.join(__dirname, 'Imag'))); // Pasta /img
