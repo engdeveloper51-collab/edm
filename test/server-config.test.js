@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { resolveServerMode } = require('../server-config');
+const { resolveServerMode, resolveDatabaseEngine } = require('../server-config');
 
 test('defaults to HTTP when HTTPS is not explicitly enabled', () => {
   const result = resolveServerMode({
@@ -20,4 +20,13 @@ test('uses HTTPS when explicitly enabled and certificates are available', () => 
 
   assert.equal(result.protocol, 'https');
   assert.equal(result.useHttps, true);
+});
+
+test('defaults to SQL Server in local development when DB_ENGINE is not provided', () => {
+  const result = resolveDatabaseEngine({
+    env: {},
+    nodeEnv: 'development'
+  });
+
+  assert.equal(result, 'mssql');
 });

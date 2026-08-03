@@ -8,6 +8,16 @@ function resolveServerMode({ env = process.env, sslOptions = null } = {}) {
   };
 }
 
+function resolveDatabaseEngine({ env = process.env, nodeEnv = process.env.NODE_ENV || 'development' } = {}) {
+  const explicitEngine = String(env.DB_ENGINE || '').trim().toLowerCase();
+  if (explicitEngine) {
+    return explicitEngine;
+  }
+
+  return nodeEnv === 'production' ? 'mysql' : 'mssql';
+}
+
 module.exports = {
-  resolveServerMode
+  resolveServerMode,
+  resolveDatabaseEngine
 };

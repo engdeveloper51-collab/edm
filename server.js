@@ -10,6 +10,7 @@ const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { normalizeComponentUpdatePayload } = require('./component-update-utils');
+const { resolveDatabaseEngine } = require('./server-config');
 require('dotenv').config();
 
 const app = express();
@@ -123,7 +124,7 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 // Os arquivos estáticos serão servidos no final, após todas as rotas
 
 // ==================== CONFIGURAÇÃO DO BANCO ====================
-const dbEngine = String(process.env.DB_ENGINE || 'mysql').toLowerCase();
+const dbEngine = resolveDatabaseEngine({ env: process.env, nodeEnv: NODE_ENV });
 
 const config = dbEngine === 'mssql' ? {
     server: process.env.DB_SERVER || 'localhost',
@@ -951,7 +952,7 @@ app.get('/api/componentes/:ativoId', async (req, res) => {
                     estado,
                     reservado19 as unidades,
                     lat,
-                    \`long\`
+                    [long]
                 FROM geo_activo_componente 
                 WHERE id_activo = @ativoId
                 ORDER BY componente
@@ -986,7 +987,7 @@ app.post('/api/componentes', async (req, res) => {
             .input('lat', sql.VarChar(50), latitude || '')
             .input('long', sql.VarChar(50), longitude || '')
             .query(`
-                INSERT INTO geo_activo_componente (id_activo, componente, estado, lat, \`long\`)
+                INSERT INTO geo_activo_componente (id_activo, componente, estado, lat, [long])
                 VALUES (@ativoId, @componente, @estado, @lat, @long);
                 SELECT SCOPE_IDENTITY() as id;
             `);
