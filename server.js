@@ -10,7 +10,7 @@ const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { normalizeComponentUpdatePayload } = require('./component-update-utils');
-const { resolveDatabaseEngine } = require('./server-config');
+const { resolveDatabaseEngine, resolveColumnIdentifier } = require('./server-config');
 require('dotenv').config();
 
 const app = express();
@@ -942,6 +942,7 @@ app.get('/api/componentes/:ativoId', async (req, res) => {
     try {
         console.log(`📥 Requisição recebida: GET /api/componentes/${req.params.ativoId}`);
 
+        const longColumn = resolveColumnIdentifier('long', dbEngine);
         const result = await pool.request()
             .input('ativoId', sql.Int, req.params.ativoId)
             .query(`
@@ -952,7 +953,7 @@ app.get('/api/componentes/:ativoId', async (req, res) => {
                     estado,
                     reservado19 as unidades,
                     lat,
-                    [long]
+                    ${longColumn} as long
                 FROM geo_activo_componente 
                 WHERE id_activo = @ativoId
                 ORDER BY componente

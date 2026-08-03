@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { resolveServerMode, resolveDatabaseEngine } = require('../server-config');
+const { resolveServerMode, resolveDatabaseEngine, resolveColumnIdentifier } = require('../server-config');
 
 test('defaults to HTTP when HTTPS is not explicitly enabled', () => {
   const result = resolveServerMode({
@@ -29,4 +29,9 @@ test('defaults to SQL Server in local development when DB_ENGINE is not provided
   });
 
   assert.equal(result, 'mssql');
+});
+
+test('uses SQL Server brackets and MySQL backticks for reserved column names', () => {
+  assert.equal(resolveColumnIdentifier('long', 'mssql'), '[long]');
+  assert.equal(resolveColumnIdentifier('long', 'mysql'), '`long`');
 });

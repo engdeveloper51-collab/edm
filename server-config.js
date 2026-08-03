@@ -17,7 +17,17 @@ function resolveDatabaseEngine({ env = process.env, nodeEnv = process.env.NODE_E
   return nodeEnv === 'production' ? 'mysql' : 'mssql';
 }
 
+function resolveColumnIdentifier(columnName, dbEngine = '') {
+  const normalizedEngine = String(dbEngine || '').trim().toLowerCase();
+  if (normalizedEngine === 'mssql') {
+    return `[${columnName}]`;
+  }
+
+  return `\`${columnName}\``;
+}
+
 module.exports = {
   resolveServerMode,
-  resolveDatabaseEngine
+  resolveDatabaseEngine,
+  resolveColumnIdentifier
 };
