@@ -935,6 +935,24 @@
                         <option value="Pendente">⏳ Pendente</option>
                     </select>
                 </div>
+                <div style="margin-bottom: 12px;">
+                    <label
+                        style="font-weight: 600; color: #333; margin-bottom: 3px; display: block; font-size: 11px;">Unidades:</label>
+                    <select id="unidadesEstado"
+                        style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px;">
+                        <option value="">Seleccione</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
             </div>
             <div style="padding: 8px; display: flex; gap: 6px; justify-content: flex-end;">
                 <button class="btn btn-cancel" onclick="fecharModalActualizar()">✕ Cancelar</button>
@@ -1204,6 +1222,7 @@
             document.getElementById('componenteNome').value = nome;
             document.getElementById('estadoAtual').value = estado;
             document.getElementById('novoEstado').value = '';
+            document.getElementById('unidadesEstado').value = '';
 
             document.getElementById('modalComponentesLista').classList.remove('show');
             document.getElementById('modalActualizar').classList.add('show');
@@ -1217,9 +1236,15 @@
         // ==================== SAVE STATE ====================
         async function salvarEstado() {
             const novoEstado = document.getElementById("novoEstado").value;
+            const unidades = document.getElementById("unidadesEstado").value;
 
             if (!novoEstado) {
                 mostrarErro('Seleccione um novo estado');
+                return;
+            }
+
+            if (!unidades) {
+                mostrarErro('Seleccione as unidades');
                 return;
             }
 
@@ -1229,7 +1254,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ estado: novoEstado })
+                    body: JSON.stringify({ estado: novoEstado, unidades: unidades })
                 });
 
                 if (!response.ok) {

@@ -109,3 +109,6 @@ SSL_CERT_PATH=localhost+1.pem
 root@ubuntu:~/EDM# R^C
 root@ubuntu:~/EDM# 
 +-------------------------+
+
+
+ ssh root@212.227.165.26 "docker exec mysql mysql -u edm_user -p'EdmPass!123' -D db_dlaudo_erp -e 'SELECT COUNT(*) AS geo_poste_total FROM geo_poste; SELECT COUNT(*) AS geo_postecadastro_total FROM geo_postecadastro;'"

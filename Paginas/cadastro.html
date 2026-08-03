@@ -762,8 +762,8 @@
 
             <!-- BOTÕES DE AÇÃO -->
             <div class="button-container">
-                <button onclick="salvarCadastro()" title="Salvar cadastro">✓ Salvar</button>
-                <button onclick="novaArea()" title="Registar nova área">🔄 Nova Área</button>
+                <button type="button" onclick="salvarCadastro(event)" title="Salvar cadastro">✓ Salvar</button>
+                <button type="button" onclick="novaArea()" title="Registar nova área">🔄 Nova Área</button>
             </div>
         </div>
     </div>
@@ -1163,12 +1163,14 @@
         }
 
         // ==================== SALVAR ====================
-        async function salvarCadastro() {
+        async function salvarCadastro(event) {
             if (!validarFormulario()) return;
 
             const btnSalvar = event.target;
-            btnSalvar.disabled = true;
-            btnSalvar.classList.add('loading');
+            if (btnSalvar) {
+                btnSalvar.disabled = true;
+                btnSalvar.classList.add('loading');
+            }
 
             try {
                 const tipoAtivo = document.getElementById('tipoAtivo').value;
@@ -1190,7 +1192,7 @@
                     formData.append('imagem', imagemSelecionada, 'captura.jpg');
                 }
 
-                const resAtivo = await fetch(`${API_URL}/activos`, {
+                const resAtivo = await fetch(`${API_URL}/cadastro-activos`, {
                     method: 'POST',
                     body: formData
                 });

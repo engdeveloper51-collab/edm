@@ -933,6 +933,22 @@
                     <option value="Pendente">Pendente</option>
                 </select>
             </div>
+            <div class="form-group">
+                <label>Unidades:</label>
+                <select id="unidadesEstado">
+                    <option value="">Seleccione</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                </select>
+            </div>
             <div class="modal-buttons">
                 <button class="cancel" onclick="fecharModal('modalActualizar')">Cancelar</button>
                 <button onclick="salvarEstado()">Salvar</button>
@@ -1326,6 +1342,7 @@
             document.getElementById('componenteNome').value = nome;
             document.getElementById('estadoAtual').value = estado;
             document.getElementById('novoEstado').value = '';
+            document.getElementById('unidadesEstado').value = '';
 
             document.getElementById('modalComponentesLista').classList.remove('active');
             document.getElementById('modalActualizar').classList.add('active');
@@ -1333,9 +1350,15 @@
 
         async function salvarEstado() {
             const novoEstado = document.getElementById("novoEstado").value;
+            const unidades = document.getElementById("unidadesEstado").value;
 
             if (!novoEstado) {
                 mostrarNotificacao('Seleccione um novo estado', 'error');
+                return;
+            }
+
+            if (!unidades) {
+                mostrarNotificacao('Seleccione as unidades', 'error');
                 return;
             }
 
@@ -1345,7 +1368,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ estado: novoEstado })
+                    body: JSON.stringify({ estado: novoEstado, unidades: unidades })
                 });
 
                 if (!response.ok) {

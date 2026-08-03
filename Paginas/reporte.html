@@ -604,12 +604,16 @@
                     </div>
 
                     <div class="componentes-label">Componentes Danificados (${ativo.componentes.length})</div>
-                    ${ativo.componentes.map(comp => `
-                        <div class="componente-item">
-                            <span class="componente-nome">• ${comp.nome}</span>
-                            <span class="status-badge">Danificado</span>
-                        </div>
-                    `).join('')}
+                    ${ativo.componentes.map(comp => {
+                        const unidades = comp.unidades ?? comp.reservado19 ?? '-';
+                        return `
+                            <div class="componente-item">
+                                <span class="componente-nome">• ${comp.nome}</span>
+                                <span class="status-badge">Danificado</span>
+                                <span style="margin-left: 8px; color: #666; font-size: 12px;">Unidades: ${unidades}</span>
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
             `).join('');
         }
@@ -653,11 +657,12 @@
                        (!tipo || a.tipo === tipo);
             });
 
-            let csv = 'ID,Tipo,Cidade,Bairro,Latitude,Longitude,Componente,Estado\n';
+let csv = 'ID,Tipo,Cidade,Bairro,Latitude,Longitude,Componente,Estado,Unidades\n';
 
             ativosFiltrados.forEach(ativo => {
                 ativo.componentes.forEach(comp => {
-                    csv += `${ativo.id},"${ativo.tipo}","${ativo.cidade}","${ativo.bairro}",${ativo.latitude},${ativo.longitude},"${comp.nome}",Danificado\n`;
+                    const unidades = comp.unidades ?? comp.reservado19 ?? '-';
+                    csv += `${ativo.id},"${ativo.tipo}","${ativo.cidade}","${ativo.bairro}",${ativo.latitude},${ativo.longitude},"${comp.nome}",Danificado,"${unidades}"\n`; 
                 });
             });
 

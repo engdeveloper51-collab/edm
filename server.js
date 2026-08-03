@@ -9,6 +9,7 @@ const https = require('https');
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { normalizeComponentUpdatePayload } = require('./component-update-utils');
 require('dotenv').config();
 
 const app = express();
@@ -948,8 +949,9 @@ app.get('/api/componentes/:ativoId', async (req, res) => {
                     id_activo as ativoId,
                     componente as nome, 
                     estado,
+                    reservado19 as unidades,
                     lat,
-                    long
+                    \`long\`
                 FROM geo_activo_componente 
                 WHERE id_activo = @ativoId
                 ORDER BY componente
@@ -984,7 +986,7 @@ app.post('/api/componentes', async (req, res) => {
             .input('lat', sql.VarChar(50), latitude || '')
             .input('long', sql.VarChar(50), longitude || '')
             .query(`
-                INSERT INTO geo_activo_componente (id_activo, componente, estado, lat, long)
+                INSERT INTO geo_activo_componente (id_activo, componente, estado, lat, \`long\`)
                 VALUES (@ativoId, @componente, @estado, @lat, @long);
                 SELECT SCOPE_IDENTITY() as id;
             `);
@@ -1011,7 +1013,7 @@ app.put('/api/componentes/:id', async (req, res) => {
     try {
         console.log(`📥 Requisição recebida: PUT /api/componentes/${req.params.id}`);
 
-        const { estado } = req.body;
+        const { estado, unidades } = normalizeComponentUpdatePayload(req.body);
 
         if (!estado) {
             return res.status(400).json({ error: 'Estado é obrigatório' });
@@ -1020,9 +1022,11 @@ app.put('/api/componentes/:id', async (req, res) => {
         const result = await pool.request()
             .input('id', sql.Int, req.params.id)
             .input('estado', sql.VarChar(50), estado)
+            .input('reservado19', sql.VarChar(50), unidades)
             .query(`
                 UPDATE geo_activo_componente 
-                SET estado = @estado
+                SET estado = @estado,
+                    reservado19 = @reservado19
                 WHERE id = @id
             `);
 
@@ -1030,7 +1034,7 @@ app.put('/api/componentes/:id', async (req, res) => {
             return res.status(404).json({ error: 'Componente não encontrado' });
         }
 
-        console.log(`✅ Componente ${req.params.id} actualizado para: ${estado}`);
+        console.log(`✅ Componente ${req.params.id} actualizado para: ${estado} com unidades ${unidades ?? 'sem valor'}`);
         res.json({ success: true, message: 'Componente actualizado com sucesso' });
     } catch (err) {
         console.error(`❌ Erro ao actualizar componente:`, err.message);

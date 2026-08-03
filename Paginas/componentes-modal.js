@@ -107,7 +107,7 @@ function editarComponenteFilho(id, nome, estado) {
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Quantidade:</label>
+                    <label>Unidades:</label>
                     <select id="compQuantidadeFilho">
                         <option value="">Seleccione</option>
                         <option value="1">1</option>
